@@ -1,6 +1,6 @@
 {
-	"name": "GitHub Project Card Generator",
-	"short_name": "Card Generator",
+	"name": "GitCardX - GitHub Project Card Generator",
+	"short_name": "GitCardX",
 	"description": "Create beautiful project cards for your GitHub repositories",
 	"start_url": "/",
 	"display": "standalone",
@@ -39,7 +39,7 @@
 			"sizes": "1280x800",
 			"type": "image/png",
 			"form_factor": "wide",
-			"label": "GitHub Card Generator - Desktop View"
+			"label": "GitCardX - Desktop View"
 		}
 	]
 }
