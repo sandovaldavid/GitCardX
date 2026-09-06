@@ -11,7 +11,7 @@ download.
 <div align="center">
     <img src="assets/logo/github-card-generator.webp" alt="GitCardX Logo" width="100">
     
-![Version](https://img.shields.io/badge/version-3.0.1-blue.svg?cacheSeconds=2592000)
+![Version](https://img.shields.io/badge/version-3.1.0-blue.svg?cacheSeconds=2592000)
 ![Status](https://img.shields.io/badge/status-active-success.svg)
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![HTML](https://img.shields.io/badge/HTML-5-orange.svg)
@@ -80,10 +80,10 @@ The project does not require a build process, as it is a static web application:
 
 ```bash
 # Clone the repository
-git clone https://github.com/sandovaldavid/github-project-card-generator.git
+git clone https://github.com/sandovaldavid/GitCardX.git
 
 # Navigate to the directory
-cd github-project-card-generator
+cd GitCardX
 
 # Optional: start a local server with Python
 python -m http.server 8000
@@ -170,10 +170,10 @@ This project is under the MIT license. See the LICENSE file for more information
 
 ### [David Sandoval](https://github.com/sandovaldavid)
 
--   🌐 Portfolio: [devsandoval.me](https://devsandoval.me)
--   💼 LinkedIn: [@devsandoval](https://linkedin.com/in/devsandoval)
+-   🌐 Portfolio: [sandovaldavid.com](https://sandovaldavid.com)
+-   💼 LinkedIn: [@jdsandovals](https://www.linkedin.com/in/jdsandovals)
 -   💻 GitHub: [@sandovaldavid](https://github.com/sandovaldavid)
--   📧 Email: [contact@devsandoval.me](mailto:contact@devsandoval.me)
+-   📧 Email: [hello@sandovaldavid.com](mailto:hello@sandovaldavid.com)
 
 ---
 

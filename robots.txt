@@ -2,7 +2,7 @@ User-agent: *
 Allow: /
 
 # Allow indexing of all content
-Sitemap: https://gitcardx.devsandoval.me/sitemap.xml
+Sitemap: https://gitcardx.sandovaldavid.com/sitemap.xml
 
 # Disallow access to any temporary files or directories that might exist
 Disallow: /temp/
