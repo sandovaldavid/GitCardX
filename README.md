@@ -14,7 +14,7 @@
 
 <div align="center">
   <h1>GitCardX</h1>
-    <img src="static/images/logo-github-card-generator.webp" alt="GitHub Card Generator Logo" width="100">
+    <img src="public/images/logo-github-card-generator.webp" alt="GitHub Card Generator Logo" width="100">
 </div>
 
 Una herramienta web para generar atractivas tarjetas de presentación para tus proyectos de GitHub.
@@ -37,16 +37,15 @@ Personaliza, previsualiza y descarga tarjetas en formato PNG con facilidad.
 
 ## 💻 Tecnologías utilizadas
 
--   HTML5
--   CSS3
--   JavaScript (ES6+)
+-   [Astro](https://astro.build/) + TypeScript (estricto)
+-   [nanostores](https://github.com/nanostores/nanostores) - Coordinación de estado entre islas
 -   [html2canvas](https://html2canvas.hertzen.com/) - Para convertir el HTML a imagen
 -   [Font Awesome](https://fontawesome.com/) - Para los iconos de interfaz
--   [Google Fonts](https://fonts.google.com/) - Fuentes web Roboto
+-   [Google Fonts](https://fonts.google.com/) - Fuentes web Manrope
 
 ## 📋 Prerrequisitos
 
--   Navegador web moderno (Chrome, Firefox, Edge, Safari)
+-   Node.js 18+ y [pnpm](https://pnpm.io/)
 -   Conexión a internet para cargar perfiles de GitHub
 
 ## 🔧 Instalación y configuración local
@@ -63,14 +62,16 @@ git clone https://github.com/sandovaldavid/github-project-card-generator.git
 cd github-project-card-generator
 ```
 
-3. Abre el archivo index.html en tu navegador o usa un servidor local:
+3. Instala las dependencias y levanta el entorno de desarrollo:
 
 ```bash
-# Si tienes Python instalado
-python -m http.server 8000
+pnpm install && pnpm dev
+```
 
-# Si tienes Node.js instalado
-npx serve
+4. Para generar y previsualizar el build de producción:
+
+```bash
+pnpm build && pnpm preview
 ```
 
 ## 📘 Cómo usar
@@ -149,10 +150,10 @@ Este proyecto está licenciado bajo la Licencia MIT - consulta el archivo LICENS
 
 ## ✍️ Autor
 
-**Tu Nombre**
+**Juan David Sandoval Salvador**
 
--   GitHub: [@tuUsuario](https://github.com/tuUsuario)
--   LinkedIn: [@tuPerfil](https://linkedin.com/in/tuPerfil)
+-   GitHub: [@sandovaldavid](https://github.com/sandovaldavid)
+-   LinkedIn: [jdavidsandovals](https://linkedin.com/in/jdavidsandovals)
 
 ## 📌 Notas adicionales
 
