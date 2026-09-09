@@ -1,3 +1,33 @@
+@import 'tailwindcss';
+
+@theme {
+	--color-border: #00a0ff;
+	--color-bg: #0d1117;
+	--color-primary: #2ea44f;
+	--color-primary-hover: #2c974b;
+	--color-secondary: #0366d6;
+	--color-secondary-hover: #0258b8;
+	--color-danger: #e74c3c;
+	--color-danger-hover: #c0392b;
+	--color-light-gray: #f5f5f5;
+	--color-medium-gray: #ddd;
+	--color-dark-gray: #24292e;
+	--color-neutral-bg: #f0f0f0;
+	--color-neutral-bg-hover: #e0e0e0;
+	--color-label: #555;
+	--color-body: #333;
+	--font-primary: 'Manrope', sans-serif;
+	--font-secondary: 'Open Sans', sans-serif;
+
+	/* Matches the breakpoint cascade already used across index.astro,
+	   global.css and every component (read from existing @media queries). */
+	--breakpoint-xs: 480px;
+	--breakpoint-sm: 600px;
+	--breakpoint-md: 768px;
+	--breakpoint-lg: 992px;
+	--breakpoint-xl: 1200px;
+}
+
 :root {
 	--border-color: #00a0ff;
 	--bg-color: #0d1117;
@@ -13,6 +43,10 @@
 	--light-gray: #f5f5f5;
 	--medium-gray: #ddd;
 	--dark-gray: #24292e;
+	--neutral-bg: #f0f0f0;
+	--neutral-bg-hover: #e0e0e0;
+	--label-color: #555;
+	--body-color: #333;
 }
 
 * {
@@ -34,7 +68,7 @@
 
 body {
 	background-color: var(--light-gray);
-	color: #333;
+	color: var(--body-color);
 	line-height: 1.6;
 }
 
@@ -67,5 +101,18 @@ h2 {
 @media (max-width: 768px) {
 	.generator {
 		flex-direction: column;
+	}
+}
+
+/* Respect the user's OS-level reduced-motion preference: keep animations'
+   end states but collapse their duration to effectively instant. */
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+		scroll-behavior: auto !important;
 	}
 }
