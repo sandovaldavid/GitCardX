@@ -3,9 +3,11 @@ interface Props {
 	id: string;
 	label: string;
 	value: string;
+	targetIcon: string;
+	targetLabel: string;
 }
 
-const { id, label, value } = Astro.props;
+const { id, label, value, targetIcon, targetLabel } = Astro.props;
 ---
 
 <div class="control-group mb-4 last:mb-0">
@@ -13,6 +15,15 @@ const { id, label, value } = Astro.props;
 	<div class="color-input-group">
 		<input type="color" id={id} value={value} />
 		<span class="color-value" data-color-value-for={id}>{value}</span>
+		<span class="color-target">
+			<i
+				class={`fas ${targetIcon} color-target-icon`}
+				data-color-icon-for={id}
+				aria-hidden="true"
+				style={`color: ${value};`}
+			></i>
+			<span class="color-target-label">{targetLabel}</span>
+		</span>
 	</div>
 </div>
 
@@ -44,6 +55,27 @@ const { id, label, value } = Astro.props;
 	.color-value {
 		font-family: var(--mono-font);
 		font-size: 14px;
+		color: var(--label-color);
+	}
+
+	.color-target {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		padding: 4px 10px;
+		border: 1px solid var(--medium-gray);
+		border-radius: 999px;
+		background-color: var(--neutral-bg-hover);
+		line-height: 1;
+	}
+
+	.color-target-icon {
+		font-size: 14px;
+		transition: color 0.15s ease;
+	}
+
+	.color-target-label {
+		font-size: 13px;
 		color: var(--label-color);
 	}
 </style>

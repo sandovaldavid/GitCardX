@@ -8,9 +8,27 @@ import { DEFAULT_COLORS } from '../../constants/defaults';
 		<i class="fas fa-palette"></i> Style Customization
 		<span class="stage-pill stage-pill--pending" id="styleStagePill">Style — pending</span>
 	</h2>
-	<ColorInput id="projectColor" label="Project Name Color:" value={DEFAULT_COLORS.projectColor} />
-	<ColorInput id="borderColor" label="Bottom Border Color:" value={DEFAULT_COLORS.borderColor} />
-	<ColorInput id="bgColor" label="Background Color:" value={DEFAULT_COLORS.bgColor} />
+	<ColorInput
+		id="bgColor"
+		label="Background Color:"
+		value={DEFAULT_COLORS.bgColor}
+		targetIcon="fa-fill-drip"
+		targetLabel="Background"
+	/>
+	<ColorInput
+		id="borderColor"
+		label="Bottom Border Color:"
+		value={DEFAULT_COLORS.borderColor}
+		targetIcon="fa-border-style"
+		targetLabel="Bottom border"
+	/>
+	<ColorInput
+		id="projectColor"
+		label="Project Name Color:"
+		value={DEFAULT_COLORS.projectColor}
+		targetIcon="fa-heading"
+		targetLabel="Heading text"
+	/>
 </div>
 
 <script>
@@ -25,6 +43,13 @@ import { DEFAULT_COLORS } from '../../constants/defaults';
 	const inputs = Object.fromEntries(
 		inputIds.map((id) => [id, document.getElementById(id) as HTMLInputElement])
 	) as Record<keyof ColorData, HTMLInputElement>;
+
+	const targetIcons = Object.fromEntries(
+		inputIds.map((id) => [
+			id,
+			document.querySelector<HTMLElement>(`[data-color-icon-for="${id}"]`),
+		])
+	) as Record<keyof ColorData, HTMLElement | null>;
 
 	const styleStagePill = document.getElementById('styleStagePill') as HTMLElement | null;
 
@@ -51,6 +76,7 @@ import { DEFAULT_COLORS } from '../../constants/defaults';
 				return;
 			}
 			colorStore.setKey(id, value);
+			if (targetIcons[id]) targetIcons[id]!.style.color = value;
 			setStageStatus('style', computeStyleStatus());
 		});
 	}
@@ -60,6 +86,7 @@ import { DEFAULT_COLORS } from '../../constants/defaults';
 			if (inputs[id].value !== state[id]) inputs[id].value = state[id];
 			const display = document.querySelector<HTMLElement>(`[data-color-value-for="${id}"]`);
 			if (display) display.textContent = state[id];
+			if (targetIcons[id]) targetIcons[id]!.style.color = state[id];
 		}
 	});
 
