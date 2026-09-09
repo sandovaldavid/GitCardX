@@ -38,17 +38,6 @@ import { DEFAULT_CARD } from '../../constants/defaults';
 		</div>
 
 		<div class="control-group mb-4 last:mb-0">
-			<label for="projectName" class="block mb-2 font-medium text-label">Project Name:</label>
-			<input
-				type="text"
-				id="projectName"
-				placeholder="Enter project name"
-				value={DEFAULT_CARD.projectName}
-				maxlength="50"
-			/>
-		</div>
-
-		<div class="control-group mb-4 last:mb-0">
 			<label for="projectDescription" class="block mb-2 font-medium text-label">Project Description:</label>
 			<textarea
 				id="projectDescription"
@@ -63,17 +52,11 @@ import { DEFAULT_CARD } from '../../constants/defaults';
 <script>
 	import { cardStore, pushToast, setStageStatus, stageStatusStore } from '../../stores/cardState';
 	import type { StageStatus } from '../../stores/cardState';
-	import { getUser } from '../../lib/github';
-	import {
-		validateGitHubUsername,
-		validateDescription,
-		validateProjectName,
-		validateRepoName,
-	} from '../../utils/validators';
+	import { getRepository, getRepositoryLanguages, getUser } from '../../lib/github';
+	import { validateGitHubUsername, validateDescription, validateRepoName } from '../../utils/validators';
 
 	const usernameInput = document.getElementById('username') as HTMLInputElement;
 	const repoNameInput = document.getElementById('repoName') as HTMLInputElement;
-	const projectNameInput = document.getElementById('projectName') as HTMLInputElement;
 	const projectDescriptionInput = document.getElementById('projectDescription') as HTMLTextAreaElement;
 	const loadProfileBtn = document.getElementById('loadProfile') as HTMLButtonElement;
 	const configureStagePill = document.getElementById('configureStagePill') as HTMLElement | null;
@@ -82,23 +65,21 @@ import { DEFAULT_CARD } from '../../constants/defaults';
 	cardStore.subscribe((state) => {
 		if (usernameInput.value !== state.username) usernameInput.value = state.username;
 		if (repoNameInput.value !== state.repoName) repoNameInput.value = state.repoName;
-		if (projectNameInput.value !== state.projectName) projectNameInput.value = state.projectName;
 		if (projectDescriptionInput.value !== state.projectDescription) {
 			projectDescriptionInput.value = state.projectDescription;
 		}
 	});
 
 	// "configure" stage validity: username is the only required field (a
-	// blank username is the panel's untouched/pending state); repoName,
-	// projectName and projectDescription are all optional per validators.ts
-	// (empty passes), so they only ever fail once something invalid is typed.
+	// blank username is the panel's untouched/pending state); repoName and
+	// projectDescription are both optional per validators.ts (empty passes),
+	// so they only ever fail once something invalid is typed.
 	function computeConfigureStatus(): StageStatus {
 		if (usernameInput.value.trim() === '') return 'pending';
 
 		const results = [
 			validateGitHubUsername(usernameInput.value),
 			validateRepoName(repoNameInput.value),
-			validateProjectName(projectNameInput.value),
 			validateDescription(projectDescriptionInput.value),
 		];
 		return results.every((result) => result.isValid) ? 'passing' : 'failing';
@@ -121,16 +102,6 @@ import { DEFAULT_CARD } from '../../constants/defaults';
 			return;
 		}
 		cardStore.setKey('repoName', repoNameInput.value);
-		setStageStatus('configure', computeConfigureStatus());
-	});
-	projectNameInput.addEventListener('input', () => {
-		const validation = validateProjectName(projectNameInput.value);
-		if (!validation.isValid) {
-			pushToast(validation.message ?? 'Invalid project name', 'error');
-			setStageStatus('configure', computeConfigureStatus());
-			return;
-		}
-		cardStore.setKey('projectName', projectNameInput.value);
 		setStageStatus('configure', computeConfigureStatus());
 	});
 	projectDescriptionInput.addEventListener('input', () => {
@@ -167,16 +138,64 @@ import { DEFAULT_CARD } from '../../constants/defaults';
 		loadProfileBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
 		loadProfileBtn.disabled = true;
 
+		const repoName = repoNameInput.value.trim();
+
 		try {
-			const user = await getUser(username);
-			cardStore.set({
-				...cardStore.get(),
-				username: user.login,
-				avatarUrl: user.avatar_url,
-				profileLoaded: true,
-			});
+			if (!repoName) {
+				const user = await getUser(username);
+				cardStore.set({
+					...cardStore.get(),
+					username: user.login,
+					avatarUrl: user.avatar_url,
+					profileLoaded: true,
+				});
+				setStageStatus('configure', computeConfigureStatus());
+				pushToast('Profile loaded successfully', 'success');
+				return;
+			}
+
+			const [userResult, repoResult, languagesResult] = await Promise.allSettled([
+				getUser(username),
+				getRepository(username, repoName),
+				getRepositoryLanguages(username, repoName),
+			]);
+
+			if (userResult.status === 'fulfilled') {
+				cardStore.set({
+					...cardStore.get(),
+					username: userResult.value.login,
+					avatarUrl: userResult.value.avatar_url,
+					profileLoaded: true,
+				});
+				pushToast('Profile loaded successfully', 'success');
+			} else {
+				pushToast(
+					`Error: ${userResult.reason instanceof Error ? userResult.reason.message : String(userResult.reason)}`,
+					'error'
+				);
+			}
+
+			// repoResult and languagesResult are independent network requests for
+			// the same repo — apply each on its own success rather than letting
+			// one failure discard the other's otherwise-valid data.
+			if (repoResult.status === 'fulfilled') {
+				cardStore.set({
+					...cardStore.get(),
+					starCount: repoResult.value.stargazers_count,
+					forkCount: repoResult.value.forks_count,
+				});
+			} else {
+				pushToast(
+					`Error loading repository: ${repoResult.reason instanceof Error ? repoResult.reason.message : String(repoResult.reason)}`,
+					'error'
+				);
+			}
+
+			if (languagesResult.status === 'fulfilled') {
+				cardStore.setKey('languages', languagesResult.value);
+			}
+
 			setStageStatus('configure', computeConfigureStatus());
-			pushToast('Profile loaded successfully', 'success');
 		} catch (error) {
 			pushToast(`Error: ${error instanceof Error ? error.message : String(error)}`, 'error');
 		} finally {

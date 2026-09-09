@@ -1,14 +1,17 @@
 import { map } from 'nanostores';
 import { DEFAULT_BG_OPACITY, DEFAULT_CARD, DEFAULT_COLORS } from '../constants/defaults';
 import { GITHUB_API } from '../constants/github';
+import type { LanguageSlice } from '../lib/github';
 
 export interface CardData {
 	username: string;
 	repoName: string;
-	projectName: string;
 	projectDescription: string;
 	avatarUrl: string;
 	profileLoaded: boolean;
+	starCount: number;
+	forkCount: number;
+	languages: LanguageSlice[];
 }
 
 export const cardStore = map<CardData>({

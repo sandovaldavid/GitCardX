@@ -17,9 +17,6 @@ const CONFIG = {
 		MAX_LENGTH: 100,
 		PATTERN: /^[a-zA-Z0-9._-]+$/,
 	},
-	PROJECT_NAME: {
-		MAX_LENGTH: 50,
-	},
 	DESCRIPTION: {
 		MAX_LENGTH: 280,
 	},
@@ -76,23 +73,6 @@ export function validateRepoName(repoName: string): ValidationResult {
 			isValid: false,
 			message:
 				'Repository name can only contain alphanumeric characters, periods, hyphens and underscores',
-		};
-	}
-
-	return { isValid: true };
-}
-
-export function validateProjectName(projectName: string): ValidationResult {
-	if (!projectName || projectName.trim() === '') {
-		return { isValid: true };
-	}
-
-	projectName = projectName.trim();
-
-	if (projectName.length > CONFIG.PROJECT_NAME.MAX_LENGTH) {
-		return {
-			isValid: false,
-			message: `Project name cannot exceed ${CONFIG.PROJECT_NAME.MAX_LENGTH} characters`,
 		};
 	}
 

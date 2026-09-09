@@ -150,17 +150,17 @@ function scaleCardElements(card: HTMLElement): void {
 	if (footer) {
 		Object.assign(footer.style, {
 			zIndex: '2',
-			paddingLeft: '30px',
-			paddingBottom: '120px',
-			minHeight: '180px',
+			padding: '0 30px 30px',
+			minHeight: '100px',
 		});
 	}
 
 	const textElements: Record<string, { selector: string; fontSizeRem: number; lineHeight?: number }> = {
 		repoName: { selector: '#displayRepoName', ...EXPORT_TEXT_SIZES.repoName },
 		username: { selector: '#displayUsername', ...EXPORT_TEXT_SIZES.username },
-		projectName: { selector: '#displayProjectName', ...EXPORT_TEXT_SIZES.projectName },
 		description: { selector: '#displayDescription', ...EXPORT_TEXT_SIZES.description },
+		starCount: { selector: '#displayStarCount', ...EXPORT_TEXT_SIZES.statCount },
+		forkCount: { selector: '#displayForkCount', ...EXPORT_TEXT_SIZES.statCount },
 	};
 
 	for (const config of Object.values(textElements)) {
@@ -173,37 +173,45 @@ function scaleCardElements(card: HTMLElement): void {
 		}
 	}
 
-	const githubLogo = card.querySelector<HTMLElement>('.github-logo');
-	if (githubLogo) {
-		githubLogo.style.width = `${ASSET_SIZES.githubLogo.export}px`;
-		githubLogo.style.height = `${ASSET_SIZES.githubLogo.export}px`;
-		githubLogo.style.marginRight = '20px';
-	}
-
 	const profilePic = card.querySelector<HTMLElement>('.profile-pic');
 	if (profilePic) {
 		profilePic.style.width = `${ASSET_SIZES.profilePic.export}px`;
 		profilePic.style.height = `${ASSET_SIZES.profilePic.export}px`;
 	}
 
+	const statIcons = card.querySelectorAll<HTMLElement>('.stat-chip i');
+	statIcons.forEach((icon) => {
+		icon.style.fontSize = `${ASSET_SIZES.statIcon.export}px`;
+	});
+
+	const languageBar = card.querySelector<HTMLElement>('.language-bar');
+	if (languageBar) {
+		languageBar.style.height = `${ASSET_SIZES.languageBar.export}px`;
+		// The .language-bar CSS rule's negative margin (-25px) compensates for
+		// the PREVIEW card's 25px padding so the bar reaches the true edges.
+		// The export clone's own padding is overridden above to 40pt/40pt/0/40pt
+		// (see prepareCardForExport), so that same -25px would under-compensate
+		// left/right and over-shoot the now-zero bottom padding. Override both
+		// inline to match the clone's actual padding instead.
+		languageBar.style.margin = '0 -40pt 0';
+		languageBar.style.width = 'calc(100% + 80pt)';
+	}
+
 	const projectLogo = card.querySelector<HTMLElement>('.project-logo');
 	if (projectLogo) {
 		projectLogo.style.width = 'auto';
-		projectLogo.style.height = '6rem';
+		projectLogo.style.height = '4rem';
 		projectLogo.style.borderRadius = '10px';
 	}
 
 	const logoContainer = card.querySelector<HTMLElement>('.logo-container');
 	if (logoContainer) {
 		Object.assign(logoContainer.style, {
-			position: 'absolute',
-			bottom: '30px',
-			right: '40px',
-			maxHeight: '8rem',
 			zIndex: '2',
 			display: 'flex',
 			alignItems: 'center',
 			justifyContent: 'center',
+			maxHeight: '5rem',
 		});
 	}
 }

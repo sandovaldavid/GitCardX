@@ -1,3 +1,5 @@
+import type { LanguageSlice } from '../lib/github';
+
 export const NOTIFICATION_DURATION_MS = 3000;
 export const ANIMATION_DELAY_MS = 500;
 
@@ -10,9 +12,11 @@ export const DEFAULT_COLORS = {
 export const DEFAULT_CARD = {
 	username: '',
 	repoName: '',
-	projectName: 'Project Name',
 	projectDescription: '',
-} as const;
+	starCount: 0,
+	forkCount: 0,
+	languages: [] as LanguageSlice[],
+};
 
 export const DEFAULT_BG_OPACITY = 0.6;
 

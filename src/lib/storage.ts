@@ -1,18 +1,16 @@
 import { STORAGE_KEY } from '../constants/defaults';
 import { cardStore, colorStore, imageStore, type CardData, type ColorData, type ImageData } from '../stores/cardState';
-import {
-	validateColor,
-	validateDescription,
-	validateGitHubUsername,
-	validateProjectName,
-	validateRepoName,
-} from '../utils/validators';
+import { validateColor, validateDescription, validateGitHubUsername, validateRepoName } from '../utils/validators';
 import { DEFAULT_BG_OPACITY, DEFAULT_CARD, DEFAULT_COLORS } from '../constants/defaults';
 import { GITHUB_API } from '../constants/github';
 
+// Only username/repoName/projectDescription are persisted: they're
+// user-authored form data. starCount/forkCount/languages are fetched live
+// from GitHub and can go stale, so they're intentionally left out here and
+// re-fetched fresh via a "Load" click when the form is restored.
 interface PersistedState {
 	colors: ColorData;
-	card: Pick<CardData, 'username' | 'repoName' | 'projectName' | 'projectDescription'>;
+	card: Pick<CardData, 'username' | 'repoName' | 'projectDescription'>;
 	images: ImageData;
 }
 
@@ -40,7 +38,6 @@ export function save(): boolean {
 		card: {
 			username: card.username,
 			repoName: card.repoName,
-			projectName: card.projectName,
 			projectDescription: card.projectDescription,
 		},
 		images,
@@ -76,15 +73,12 @@ export function load(): boolean {
 		}
 
 		if (parsed.card) {
-			const { username, repoName, projectName, projectDescription } = parsed.card;
+			const { username, repoName, projectDescription } = parsed.card;
 			if (username !== undefined && validateGitHubUsername(username).isValid) {
 				cardStore.setKey('username', username);
 			}
 			if (repoName !== undefined && validateRepoName(repoName).isValid) {
 				cardStore.setKey('repoName', repoName);
-			}
-			if (projectName !== undefined && validateProjectName(projectName).isValid) {
-				cardStore.setKey('projectName', projectName);
 			}
 			if (projectDescription !== undefined && validateDescription(projectDescription).isValid) {
 				cardStore.setKey('projectDescription', projectDescription);

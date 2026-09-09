@@ -5,35 +5,39 @@ import { GITHUB_API } from '../../constants/github';
 <div id="cardContainer">
 	<div id="githubCard" class="card">
 		<div class="card-header">
-			<div class="repo-info">
-				<img
-					src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
-					alt="GitHub Logo"
-					class="github-logo"
-					width="30"
-					height="30"
-				/>
-				<span id="displayRepoName">/repository-name</span>
+			<div class="title-info">
+				<h1 id="displayTitle" class="repo-title">
+					<span id="displayUsername">username</span><span class="title-separator">/</span><span
+						id="displayRepoName">repository-name</span
+					>
+				</h1>
 			</div>
-			<div class="user-info">
-				<span id="displayUsername">username</span>
-				<img
-					id="profilePic"
-					src={GITHUB_API.DEFAULT_AVATAR}
-					alt="Profile Picture"
-					class="profile-pic"
-					width="40"
-					height="40"
-				/>
-			</div>
+			<img
+				id="profilePic"
+				src={GITHUB_API.DEFAULT_AVATAR}
+				alt="Profile Picture"
+				class="profile-pic"
+				width="40"
+				height="40"
+			/>
 		</div>
 		<div class="card-body">
 			<p id="displayDescription" class="project-description"></p>
 		</div>
 		<div class="card-footer">
-			<h2 id="displayProjectName">Project Name</h2>
+			<div id="statsRow" class="stats-row" style="display: none;">
+				<span class="stat-chip">
+					<i class="fas fa-star"></i>
+					<span id="displayStarCount" class="stat-count">0</span>
+				</span>
+				<span class="stat-chip">
+					<i class="fas fa-code-branch"></i>
+					<span id="displayForkCount" class="stat-count">0</span>
+				</span>
+			</div>
 			<div id="logoContainer" class="logo-container"></div>
 		</div>
+		<div id="languageBar" class="language-bar" style="display: none;"></div>
 	</div>
 </div>
 
@@ -45,8 +49,11 @@ import { GITHUB_API } from '../../constants/github';
 	const displayUsername = document.getElementById('displayUsername');
 	const profilePic = document.getElementById('profilePic') as HTMLImageElement | null;
 	const displayRepoName = document.getElementById('displayRepoName');
-	const displayProjectName = document.getElementById('displayProjectName');
 	const displayDescription = document.getElementById('displayDescription') as HTMLElement | null;
+	const statsRow = document.getElementById('statsRow') as HTMLElement | null;
+	const displayStarCount = document.getElementById('displayStarCount');
+	const displayForkCount = document.getElementById('displayForkCount');
+	const languageBar = document.getElementById('languageBar') as HTMLElement | null;
 	const logoContainer = document.getElementById('logoContainer');
 	const card = document.getElementById('githubCard');
 	const cardContainer = document.getElementById('cardContainer') as HTMLElement | null;
@@ -54,16 +61,53 @@ import { GITHUB_API } from '../../constants/github';
 	cardStore.subscribe((state) => {
 		if (displayUsername) displayUsername.textContent = state.username || 'username';
 		if (profilePic) profilePic.src = state.avatarUrl;
-		if (displayRepoName) displayRepoName.textContent = state.repoName ? `/${state.repoName}` : '/repository-name';
-		if (displayProjectName) displayProjectName.textContent = state.projectName || 'Project Name';
+		if (displayRepoName) displayRepoName.textContent = state.repoName || 'repository-name';
 		if (displayDescription) {
 			displayDescription.textContent = state.projectDescription || '';
-			displayDescription.style.display = state.projectDescription ? 'block' : 'none';
+			// '' (not 'block') so the stylesheet's `display: -webkit-box` (the
+			// line-clamp trigger) takes over when visible — an inline 'block'
+			// would silently disable the clamp.
+			displayDescription.style.display = state.projectDescription ? '' : 'none';
+		}
+
+		// Stats and the language bar only mean anything once a repo has
+		// actually been loaded — before that, hide them instead of showing
+		// misleading "0 stars/0 forks" placeholders.
+		const repoLoaded = state.profileLoaded && Boolean(state.repoName);
+
+		if (statsRow) {
+			statsRow.style.display = repoLoaded ? 'flex' : 'none';
+		}
+		if (displayStarCount) displayStarCount.textContent = String(state.starCount);
+		if (displayForkCount) displayForkCount.textContent = String(state.forkCount);
+
+		if (languageBar) {
+			if (repoLoaded && state.languages.length > 0) {
+				languageBar.style.display = 'flex';
+				languageBar.replaceChildren(
+					...state.languages.map((slice) => {
+						const segment = document.createElement('span');
+						segment.className = 'language-segment';
+						segment.style.flexBasis = `${slice.percentage}%`;
+						segment.style.backgroundColor = slice.color;
+						segment.title = `${slice.name} (${slice.percentage.toFixed(1)}%)`;
+						return segment;
+					})
+				);
+			} else {
+				languageBar.style.display = 'none';
+				languageBar.replaceChildren();
+			}
 		}
 	});
 
+	const displayTitle = document.getElementById('displayTitle');
+
 	colorStore.subscribe((state) => {
-		if (displayProjectName) (displayProjectName as HTMLElement).style.color = state.projectColor;
+		// "Project Name Color" (ColorControlsPanel) now targets the
+		// consolidated title heading, since the old standalone project-name
+		// heading it used to color no longer exists.
+		if (displayTitle) (displayTitle as HTMLElement).style.color = state.projectColor;
 		setCSSVariables({ '--border-color': state.borderColor, '--bg-color': state.bgColor });
 		if (cardContainer) cardContainer.style.borderBottomColor = state.borderColor;
 	});
@@ -218,46 +262,46 @@ import { GITHUB_API } from '../../constants/github';
 		padding: 20px;
 		display: flex;
 		justify-content: space-between;
-		align-items: center;
+		align-items: flex-start;
 		height: 80px;
 		min-height: 80px;
 		font-family: var(--primary-font);
+		gap: 12px;
 	}
 
-	.repo-info,
-	.user-info {
+	.title-info {
 		display: flex;
 		align-items: center;
 		min-width: 0;
+		flex: 1 1 auto;
 	}
 
-	.github-logo {
-		width: 30px;
-		height: 30px;
-		margin-right: 10px;
-		border-radius: 50%;
-	}
-
-	#displayRepoName {
-		font-size: 1.5rem;
-		font-weight: 600;
+	.repo-title {
 		max-width: 100%;
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
+		font-size: 1.6rem;
+		margin: 0;
 	}
 
 	#displayUsername {
-		font-size: 1.2rem;
-		margin-right: 10px;
-		font-weight: bold;
-		max-width: 12rem;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
+		font-weight: 300;
+		opacity: 0.85;
+	}
+
+	.title-separator {
+		font-weight: 300;
+		opacity: 0.6;
+		margin: 0 2px;
+	}
+
+	#displayRepoName {
+		font-weight: 700;
 	}
 
 	.profile-pic {
+		flex-shrink: 0;
 		width: 40px;
 		height: 40px;
 		border-radius: 50%;
@@ -268,38 +312,59 @@ import { GITHUB_API } from '../../constants/github';
 		padding: 20px;
 		display: flex;
 		align-items: center;
-		overflow-y: auto;
+		overflow: hidden;
 		min-height: 100px;
 	}
 
 	.card-footer {
 		position: relative;
 		height: auto;
-		min-height: 120px;
-		padding-bottom: 80px;
-		padding-left: 20px;
-		display: block;
+		min-height: 80px;
+		padding: 0 20px 20px;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
 		margin-top: auto;
 	}
 
-	#displayProjectName {
-		font-size: 2.5rem;
-		font-weight: bold;
-		font-family: var(--primary-font);
-		width: 100%;
-		margin-bottom: 10px;
-		text-align: left;
+	.stats-row {
+		display: flex;
+		gap: 16px;
+	}
+
+	.stat-chip {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		color: var(--label-color);
+		font-size: 1rem;
+	}
+
+	.stat-chip i {
+		font-size: 0.9rem;
+	}
+
+	.stat-count {
+		font-family: var(--mono-font);
+		font-weight: 600;
 	}
 
 	.project-description {
 		font-size: 1.2rem;
 		line-height: 1.5;
 		color: #c9d1d9;
+		width: 100%;
 		max-width: 80%;
 		margin: 0 auto;
 		text-align: justify;
 		opacity: 0.9;
 		font-family: var(--primary-font);
+		display: -webkit-box;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 3;
+		line-clamp: 3;
+		overflow: hidden;
+		text-overflow: ellipsis;
 	}
 
 	.project-logo {
@@ -310,13 +375,31 @@ import { GITHUB_API } from '../../constants/github';
 	}
 
 	.card-footer .logo-container {
-		position: absolute;
-		bottom: 20px;
-		right: 20px;
-		max-height: 8rem;
 		display: flex;
 		align-items: center;
 		justify-content: center;
+		max-height: 4rem;
+	}
+
+	/* .card has 25px padding on every side; extend the bar past it with
+	   negative margins so it reaches the card's true left/right/bottom
+	   edges (matching GitHub's own edge-to-edge language bar) instead of
+	   sitting inset like a regular padded child. #cardContainer's own
+	   border-radius + overflow:hidden (which .card exactly fills) already
+	   clips the bottom corners, so no radius is needed here. */
+	.language-bar {
+		display: flex;
+		width: calc(100% + 50px);
+		margin: 0 -25px -25px;
+		height: 6px;
+		overflow: hidden;
+		flex-shrink: 0;
+	}
+
+	.language-segment {
+		flex-grow: 0;
+		flex-shrink: 0;
+		height: 100%;
 	}
 
 	@media (max-width: 480px) {
@@ -325,22 +408,17 @@ import { GITHUB_API } from '../../constants/github';
 			height: 60px;
 		}
 
-		#displayRepoName {
+		.repo-title {
 			font-size: 1.1rem;
 		}
 
-		#displayUsername {
-			font-size: 0.9rem;
-			max-width: 6rem;
-		}
-
-		#displayProjectName {
-			font-size: 1.8rem;
+		.stats-row {
+			gap: 10px;
 		}
 
 		.card-footer {
-			min-height: 100px;
-			padding-bottom: 60px;
+			min-height: 60px;
+			padding: 0 15px 15px;
 		}
 
 		.project-logo {
