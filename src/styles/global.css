@@ -70,12 +70,20 @@ body {
 	background-color: var(--light-gray);
 	color: var(--body-color);
 	line-height: 1.6;
+	min-height: 100vh;
+	display: flex;
+	flex-direction: column;
 }
 
+/* Sticky footer: the main content area grows to fill any leftover
+   viewport height so the footer sits at the true bottom of the page
+   on short content, and appears only after scrolling on tall content. */
 .container {
 	max-width: 95vw;
 	margin: 0 auto;
 	padding: 20px;
+	flex: 1 0 auto;
+	width: 100%;
 }
 
 .animate-on-scroll {
