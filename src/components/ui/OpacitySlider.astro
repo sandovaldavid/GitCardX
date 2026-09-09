@@ -1,0 +1,74 @@
+---
+import { DEFAULT_BG_OPACITY } from '../../constants/defaults';
+
+const initialPercent = Math.round(DEFAULT_BG_OPACITY * 100);
+---
+
+<div class="control-group bg-opacity-group" id="bgOpacityGroup" style="display: none;">
+	<label for="bgOpacity">Background Opacity:</label>
+	<div class="slider-container">
+		<input type="range" id="bgOpacity" min="0" max="100" value={initialPercent} class="opacity-slider" />
+		<span class="opacity-value" id="bgOpacityValue">{initialPercent}%</span>
+	</div>
+</div>
+
+<style>
+	.control-group {
+		margin-bottom: 15px;
+	}
+
+	label {
+		display: block;
+		margin-bottom: 8px;
+		font-weight: 500;
+		color: #555;
+	}
+
+	.slider-container {
+		display: flex;
+		align-items: center;
+		gap: 1rem;
+	}
+
+	.opacity-slider {
+		flex-grow: 1;
+		height: 6px;
+		appearance: none;
+		background: linear-gradient(to right, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 1));
+		border-radius: 3px;
+		outline: none;
+	}
+
+	.opacity-slider::-webkit-slider-thumb {
+		appearance: none;
+		width: 18px;
+		height: 18px;
+		border-radius: 50%;
+		background: var(--primary-color);
+		cursor: pointer;
+		border: none;
+		box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+		transition: background 0.2s;
+	}
+
+	.opacity-slider::-moz-range-thumb {
+		width: 18px;
+		height: 18px;
+		border-radius: 50%;
+		background: var(--primary-color);
+		cursor: pointer;
+		border: none;
+		box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+		transition: background 0.2s;
+	}
+
+	.opacity-slider::-webkit-slider-thumb:hover {
+		background: var(--primary-color-hover);
+	}
+
+	.opacity-value {
+		min-width: 40px;
+		font-weight: 500;
+		color: #666;
+	}
+</style>

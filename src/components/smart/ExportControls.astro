@@ -1,0 +1,66 @@
+---
+import Button from '../ui/Button.astro';
+---
+
+<div class="preview-actions">
+	<Button id="generateCard" variant="primary"><i class="fas fa-sync-alt"></i> Update</Button>
+	<Button id="downloadCard" variant="download"><i class="fas fa-download"></i> Download</Button>
+</div>
+
+<div class="preview-footer">
+	<Button id="resetForm" variant="reset"><i class="fas fa-undo"></i> Reset All</Button>
+</div>
+
+<script>
+	import { pushToast } from '../../stores/cardState';
+	import { exportToPNG } from '../../lib/export';
+	import { reset, save } from '../../lib/storage';
+
+	const generateBtn = document.getElementById('generateCard') as HTMLButtonElement;
+	const downloadBtn = document.getElementById('downloadCard') as HTMLButtonElement;
+	const resetBtn = document.getElementById('resetForm') as HTMLButtonElement;
+
+	// The preview already re-renders reactively on every store change; "Update"
+	// mainly confirms to the user that the current state is saved.
+	generateBtn.addEventListener('click', () => {
+		save();
+		pushToast('Card updated successfully', 'success');
+	});
+
+	downloadBtn.addEventListener('click', async () => {
+		const originalLabel = downloadBtn.innerHTML;
+		downloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+		downloadBtn.disabled = true;
+
+		try {
+			await exportToPNG('githubCard');
+			pushToast('Card downloaded successfully', 'success');
+		} catch (error) {
+			pushToast('Error downloading card', 'error');
+			console.error(error);
+		} finally {
+			downloadBtn.innerHTML = originalLabel;
+			downloadBtn.disabled = false;
+		}
+	});
+
+	resetBtn.addEventListener('click', () => {
+		if (confirm('¿Estás seguro de que quieres restablecer todos los cambios?')) {
+			reset();
+			pushToast('Application reset successfully', 'success');
+		}
+	});
+</script>
+
+<style>
+	.preview-actions {
+		display: flex;
+		gap: 1rem;
+	}
+
+	.preview-footer {
+		display: flex;
+		justify-content: center;
+		margin-top: 1rem;
+	}
+</style>

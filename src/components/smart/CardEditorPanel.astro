@@ -1,0 +1,166 @@
+---
+import { DEFAULT_CARD } from '../../constants/defaults';
+---
+
+<div class="panel-section">
+	<h2><i class="fas fa-user"></i> GitHub Profile</h2>
+	<div class="control-group">
+		<label for="username">GitHub Username:</label>
+		<div class="input-with-button">
+			<input type="text" id="username" placeholder="Enter your GitHub username" />
+			<button id="loadProfile" class="action-button" type="button">
+				<i class="fas fa-download"></i> Load
+			</button>
+		</div>
+	</div>
+</div>
+
+<div class="panel-section">
+	<h2><i class="fas fa-project-diagram"></i> Project Information</h2>
+	<div class="control-group">
+		<label for="repoName">Repository Name:</label>
+		<input type="text" id="repoName" placeholder="Enter repository name" value={DEFAULT_CARD.repoName} />
+	</div>
+
+	<div class="control-group">
+		<label for="projectName">Project Name:</label>
+		<input
+			type="text"
+			id="projectName"
+			placeholder="Enter project name"
+			value={DEFAULT_CARD.projectName}
+		/>
+	</div>
+
+	<div class="control-group">
+		<label for="projectDescription">Project Description:</label>
+		<textarea id="projectDescription" placeholder="Enter project description" rows="4"
+			>{DEFAULT_CARD.projectDescription}</textarea
+		>
+	</div>
+</div>
+
+<script>
+	import { cardStore, pushToast } from '../../stores/cardState';
+	import { getUser } from '../../lib/github';
+
+	const usernameInput = document.getElementById('username') as HTMLInputElement;
+	const repoNameInput = document.getElementById('repoName') as HTMLInputElement;
+	const projectNameInput = document.getElementById('projectName') as HTMLInputElement;
+	const projectDescriptionInput = document.getElementById('projectDescription') as HTMLTextAreaElement;
+	const loadProfileBtn = document.getElementById('loadProfile') as HTMLButtonElement;
+
+	// Reflect current store state into inputs (e.g. after autosave restore).
+	cardStore.subscribe((state) => {
+		if (usernameInput.value !== state.username) usernameInput.value = state.username;
+		if (repoNameInput.value !== state.repoName) repoNameInput.value = state.repoName;
+		if (projectNameInput.value !== state.projectName) projectNameInput.value = state.projectName;
+		if (projectDescriptionInput.value !== state.projectDescription) {
+			projectDescriptionInput.value = state.projectDescription;
+		}
+	});
+
+	repoNameInput.addEventListener('input', () => cardStore.setKey('repoName', repoNameInput.value));
+	projectNameInput.addEventListener('input', () => cardStore.setKey('projectName', projectNameInput.value));
+	projectDescriptionInput.addEventListener('input', () =>
+		cardStore.setKey('projectDescription', projectDescriptionInput.value)
+	);
+	usernameInput.addEventListener('input', () => cardStore.setKey('username', usernameInput.value));
+
+	loadProfileBtn.addEventListener('click', async () => {
+		const username = usernameInput.value.trim();
+		if (!username) {
+			pushToast('Please enter a GitHub username', 'warning');
+			return;
+		}
+
+		const originalLabel = loadProfileBtn.innerHTML;
+		loadProfileBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+		loadProfileBtn.disabled = true;
+
+		try {
+			const user = await getUser(username);
+			cardStore.set({
+				...cardStore.get(),
+				username: user.login,
+				avatarUrl: user.avatar_url,
+				profileLoaded: true,
+			});
+			pushToast('Profile loaded successfully', 'success');
+		} catch (error) {
+			pushToast(`Error: ${error instanceof Error ? error.message : String(error)}`, 'error');
+		} finally {
+			loadProfileBtn.innerHTML = originalLabel;
+			loadProfileBtn.disabled = false;
+		}
+	});
+</script>
+
+<style>
+	.panel-section {
+		margin-bottom: 2rem;
+		border-bottom: 1px solid var(--medium-gray);
+		padding-bottom: 1.5rem;
+	}
+	.panel-section:last-child {
+		margin-bottom: 0;
+		border-bottom: none;
+		padding-bottom: 0;
+	}
+
+	.control-group {
+		margin-bottom: 15px;
+	}
+	.control-group:last-child {
+		margin-bottom: 0;
+	}
+
+	label {
+		display: block;
+		margin-bottom: 8px;
+		font-weight: 500;
+		color: #555;
+	}
+
+	input[type='text'],
+	textarea {
+		width: 100%;
+		padding: 10px;
+		border: 1px solid var(--medium-gray);
+		border-radius: 6px;
+		font-size: 14px;
+		transition: border-color 0.3s;
+	}
+
+	input[type='text']:focus,
+	textarea:focus {
+		border-color: var(--primary-color);
+		outline: none;
+		box-shadow: 0 0 0 3px rgba(46, 164, 79, 0.1);
+	}
+
+	.input-with-button {
+		display: flex;
+		gap: 8px;
+	}
+	.input-with-button input {
+		flex-grow: 1;
+	}
+
+	.action-button {
+		background-color: #f0f0f0;
+		color: #333;
+		padding: 10px 15px;
+		border: none;
+		border-radius: 6px;
+		cursor: pointer;
+		font-weight: 500;
+		transition: all 0.2s;
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
+	}
+	.action-button:hover {
+		background-color: #e0e0e0;
+	}
+</style>

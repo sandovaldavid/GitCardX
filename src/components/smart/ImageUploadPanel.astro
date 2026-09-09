@@ -1,0 +1,127 @@
+---
+import FileDropzone from '../ui/FileDropzone.astro';
+import OpacitySlider from '../ui/OpacitySlider.astro';
+---
+
+<div class="panel-section">
+	<h2><i class="fas fa-image"></i> Images</h2>
+	<FileDropzone id="projectLogo" label="Project Logo:" />
+	<FileDropzone id="bgImage" label="Background Image:" removable removeId="removeBgImage" />
+	<OpacitySlider />
+</div>
+
+<script>
+	import { imageStore, pushToast } from '../../stores/cardState';
+	import { validateImageFile } from '../../utils/validators';
+
+	const projectLogoInput = document.getElementById('projectLogo') as HTMLInputElement;
+	const projectLogoFileName = document.getElementById('projectLogoFileName') as HTMLElement;
+	const bgImageInput = document.getElementById('bgImage') as HTMLInputElement;
+	const bgImageFileName = document.getElementById('bgImageFileName') as HTMLElement;
+	const removeBgImageBtn = document.getElementById('removeBgImage') as HTMLButtonElement;
+	const bgOpacityGroup = document.getElementById('bgOpacityGroup') as HTMLElement;
+	const bgOpacitySlider = document.getElementById('bgOpacity') as HTMLInputElement;
+	const bgOpacityValue = document.getElementById('bgOpacityValue') as HTMLElement;
+	const logoContainer = document.getElementById('logoContainer') as HTMLElement | null;
+	const card = document.getElementById('githubCard') as HTMLElement | null;
+
+	function readFileAsDataURL(file: File): Promise<string> {
+		return new Promise((resolve, reject) => {
+			const reader = new FileReader();
+			reader.onload = (e) => resolve(e.target?.result as string);
+			reader.onerror = reject;
+			reader.readAsDataURL(file);
+		});
+	}
+
+	async function handleLogoFile(file: File | undefined) {
+		if (!file) return;
+		const validation = validateImageFile(file);
+		if (!validation.isValid) {
+			pushToast(validation.message ?? 'Invalid file', 'error');
+			return;
+		}
+		const dataUrl = await readFileAsDataURL(file);
+		imageStore.setKey('logoDataUrl', dataUrl);
+		imageStore.setKey('logoName', file.name);
+		projectLogoFileName.textContent = file.name;
+	}
+
+	async function handleBackgroundFile(file: File | undefined) {
+		if (!file) return;
+		const validation = validateImageFile(file);
+		if (!validation.isValid) {
+			pushToast(validation.message ?? 'Invalid file', 'error');
+			return;
+		}
+		const dataUrl = await readFileAsDataURL(file);
+		imageStore.setKey('backgroundDataUrl', dataUrl);
+		imageStore.setKey('backgroundName', file.name);
+		bgImageFileName.textContent = file.name;
+	}
+
+	projectLogoInput.addEventListener('change', () => handleLogoFile(projectLogoInput.files?.[0]));
+	bgImageInput.addEventListener('change', () => handleBackgroundFile(bgImageInput.files?.[0]));
+
+	removeBgImageBtn.addEventListener('click', () => {
+		imageStore.setKey('backgroundDataUrl', null);
+		imageStore.setKey('backgroundName', null);
+		bgImageInput.value = '';
+		bgImageFileName.textContent = 'No file chosen';
+	});
+
+	bgOpacitySlider.addEventListener('input', () => {
+		const value = Number(bgOpacitySlider.value);
+		bgOpacityValue.textContent = `${value}%`;
+		imageStore.setKey('backgroundOpacity', value / 100);
+	});
+
+	function setupDragAndDrop(dropZone: HTMLElement, onFile: (file: File | undefined) => void) {
+		['dragenter', 'dragover', 'dragleave', 'drop'].forEach((eventName) => {
+			dropZone.addEventListener(eventName, (e) => {
+				e.preventDefault();
+				e.stopPropagation();
+			});
+		});
+
+		['dragenter', 'dragover'].forEach((eventName) => {
+			dropZone.addEventListener(eventName, () => dropZone.classList.add('drop-zone-active'));
+		});
+
+		['dragleave', 'drop'].forEach((eventName) => {
+			dropZone.addEventListener(eventName, () => dropZone.classList.remove('drop-zone-active'));
+		});
+
+		dropZone.addEventListener('drop', (e) => {
+			const file = (e as DragEvent).dataTransfer?.files?.[0];
+			onFile(file);
+		});
+	}
+
+	if (logoContainer) setupDragAndDrop(logoContainer, handleLogoFile);
+	if (card) setupDragAndDrop(card, handleBackgroundFile);
+
+	imageStore.subscribe((state) => {
+		bgOpacityGroup.style.display = state.backgroundDataUrl ? 'block' : 'none';
+
+		if (!state.logoDataUrl) projectLogoFileName.textContent = 'No file chosen';
+		if (!state.backgroundDataUrl) bgImageFileName.textContent = 'No file chosen';
+
+		const percent = Math.round(state.backgroundOpacity * 100);
+		bgOpacitySlider.value = String(percent);
+		bgOpacityValue.textContent = `${percent}%`;
+	});
+</script>
+
+<style>
+	.panel-section {
+		margin-bottom: 2rem;
+		border-bottom: 1px solid var(--medium-gray);
+		padding-bottom: 1.5rem;
+	}
+	.panel-section:last-child {
+		margin-bottom: 0;
+		border-bottom: none;
+		padding-bottom: 0;
+	}
+</style>

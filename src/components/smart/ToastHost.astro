@@ -1,0 +1,61 @@
+---
+import Toast from '../ui/Toast.astro';
+---
+
+<Toast />
+
+<script>
+	import { dismissToast, toastStore, type ToastType } from '../../stores/cardState';
+	import { NOTIFICATION_DURATION_MS } from '../../constants/defaults';
+
+	const container = document.getElementById('toastContainer');
+	const template = document.getElementById('toast-template');
+	const rendered = new Set<number>();
+
+	const ICONS: Record<ToastType, string> = {
+		success: 'fa-check-circle',
+		error: 'fa-exclamation-circle',
+		warning: 'fa-exclamation-triangle',
+		info: 'fa-info-circle',
+	};
+
+	toastStore.subscribe((state) => {
+		if (!container || !(template instanceof HTMLTemplateElement)) return;
+
+		for (const toast of state.toasts) {
+			if (rendered.has(toast.id)) continue;
+			rendered.add(toast.id);
+
+			const fragment = template.content.cloneNode(true) as DocumentFragment;
+			const el = fragment.querySelector<HTMLElement>('.notification');
+			const icon = fragment.querySelector<HTMLElement>('.notification-icon');
+			const content = fragment.querySelector<HTMLElement>('.content');
+			const closeBtn = fragment.querySelector<HTMLElement>('.close-btn');
+			if (!el || !icon || !content || !closeBtn) continue;
+
+			el.classList.add(toast.type);
+			content.textContent = toast.message;
+			icon.innerHTML = `<i class="fas ${ICONS[toast.type]}"></i>`;
+
+			const remove = () => {
+				el.classList.remove('fade-in');
+				el.classList.add('fade-out');
+				setTimeout(() => {
+					el.remove();
+					dismissToast(toast.id);
+					rendered.delete(toast.id);
+				}, 300);
+			};
+
+			closeBtn.addEventListener('click', (e) => {
+				e.stopPropagation();
+				remove();
+			});
+			el.addEventListener('click', remove);
+
+			container.appendChild(el);
+			setTimeout(() => el.classList.add('fade-in'), 10);
+			setTimeout(remove, NOTIFICATION_DURATION_MS);
+		}
+	});
+</script>

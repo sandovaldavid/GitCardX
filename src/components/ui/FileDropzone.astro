@@ -1,0 +1,108 @@
+---
+interface Props {
+	id: string;
+	label: string;
+	removable?: boolean;
+	removeId?: string;
+}
+
+const { id, label, removable = false, removeId } = Astro.props;
+const fileNameId = `${id}FileName`;
+---
+
+<div class="control-group">
+	<label for={id}>{label}</label>
+	<div class="file-input-group">
+		<input type="file" id={id} accept="image/*" class="file-input" />
+		<label for={id} class="file-input-label"><i class="fas fa-upload"></i> Choose File</label>
+		<span class="file-name" id={fileNameId}>No file chosen</span>
+		{
+			removable && (
+				<button id={removeId} type="button" class="small-button">
+					<i class="fas fa-trash" /> Remove
+				</button>
+			)
+		}
+	</div>
+</div>
+
+<style>
+	.control-group {
+		margin-bottom: 15px;
+	}
+	.control-group:last-child {
+		margin-bottom: 0;
+	}
+
+	label {
+		display: block;
+		margin-bottom: 8px;
+		font-weight: 500;
+		color: #555;
+	}
+
+	.file-input-group {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 10px;
+	}
+
+	.file-input {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		padding: 0;
+		margin: -1px;
+		overflow: hidden;
+		clip: rect(0, 0, 0, 0);
+		border: 0;
+	}
+
+	.file-input-label {
+		display: inline-block;
+		padding: 8px 12px;
+		background-color: #f0f0f0;
+		color: #333;
+		border-radius: 6px;
+		cursor: pointer;
+		font-weight: 500;
+		transition: background-color 0.2s;
+	}
+	.file-input-label:hover {
+		background-color: #e0e0e0;
+	}
+
+	.file-name {
+		font-size: 14px;
+		color: #666;
+	}
+
+	.small-button {
+		background-color: var(--danger-color);
+		color: white;
+		padding: 6px 10px;
+		font-size: 0.8rem;
+		border: none;
+		border-radius: 6px;
+		cursor: pointer;
+		font-weight: 500;
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
+	}
+	.small-button:hover {
+		background-color: var(--danger-color-hover);
+	}
+
+	@media (max-width: 768px) {
+		.file-input-group {
+			flex-direction: column;
+			align-items: flex-start;
+		}
+		.file-input-label {
+			width: 100%;
+			text-align: center;
+		}
+	}
+</style>
