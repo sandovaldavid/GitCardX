@@ -38,7 +38,8 @@ import { GITHUB_API } from '../../constants/github';
 </div>
 
 <script>
-	import { cardStore, colorStore, imageStore } from '../../stores/cardState';
+	import { cardStore, colorStore, imageStore, stageStatusStore } from '../../stores/cardState';
+	import type { StageStatus } from '../../stores/cardState';
 	import { setCSSVariables } from '../../utils/dom';
 
 	const displayUsername = document.getElementById('displayUsername');
@@ -94,18 +95,70 @@ import { GITHUB_API } from '../../constants/github';
 
 		setCSSVariables({ '--bg-overlay-opacity': state.backgroundOpacity });
 	});
+
+	// This preview IS the pipeline's "Build Artifact" node from the
+	// stage-rail (src/pages/index.astro): it derives the same aggregate
+	// status from stageStatusStore and reflects it on its own "BUILD
+	// ARTIFACT" tag, so the rail visibly terminates here instead of at a
+	// disconnected duplicate pill.
+	type ConfigStage = 'configure' | 'style' | 'assets';
+	const CONFIG_STAGES: ConfigStage[] = ['configure', 'style', 'assets'];
+
+	function deriveBuildStatus(state: Record<ConfigStage, StageStatus>): StageStatus {
+		if (CONFIG_STAGES.every((stage) => state[stage] === 'passing')) return 'passing';
+		if (CONFIG_STAGES.some((stage) => state[stage] === 'running')) return 'running';
+		if (CONFIG_STAGES.some((stage) => state[stage] === 'failing')) return 'failing';
+		return 'pending';
+	}
+
+	stageStatusStore.subscribe((state) => {
+		if (cardContainer) cardContainer.dataset.buildStatus = deriveBuildStatus(state);
+	});
 </script>
 
 <style>
 	#cardContainer {
 		position: relative;
 		background-color: var(--neutral-bg);
+		border: 1px solid color-mix(in srgb, var(--primary-color) 20%, var(--medium-gray));
 		border-radius: 12px;
-		box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+		box-shadow: 0 4px 15px rgba(0, 0, 0, 0.35);
 		overflow: hidden;
 		aspect-ratio: 2 / 1;
 		width: 100%;
 		border-bottom: 2rem solid var(--border-color);
+		transition: box-shadow 0.3s ease;
+	}
+
+	/* Reflects the same aggregate status the stage-rail terminus derives
+	   (src/pages/index.astro) — this is where the pipeline actually ends. */
+	#cardContainer[data-build-status='passing'] {
+		box-shadow: 0 4px 20px color-mix(in srgb, var(--status-passing) 25%, transparent);
+	}
+
+	#cardContainer::before {
+		content: 'BUILD ARTIFACT';
+		position: absolute;
+		top: 10px;
+		left: 10px;
+		font-family: var(--mono-font);
+		font-size: 11px;
+		font-weight: 600;
+		letter-spacing: 0.04em;
+		color: var(--label-color);
+		background-color: color-mix(in srgb, var(--light-gray) 75%, transparent);
+		padding: 3px 8px;
+		border-radius: 4px;
+		pointer-events: none;
+		z-index: 10;
+		transition: color 0.25s ease;
+	}
+
+	#cardContainer[data-build-status='passing']::before {
+		color: var(--status-passing);
+	}
+	#cardContainer[data-build-status='failing']::before {
+		color: var(--status-failing);
 	}
 
 	#cardContainer::after {
@@ -113,9 +166,10 @@ import { GITHUB_API } from '../../constants/github';
 		position: absolute;
 		bottom: 10px;
 		right: 10px;
+		font-family: var(--mono-font);
 		font-size: 12px;
-		color: #666;
-		background-color: rgba(255, 255, 255, 0.7);
+		color: var(--label-color);
+		background-color: color-mix(in srgb, var(--light-gray) 75%, transparent);
 		padding: 2px 6px;
 		border-radius: 4px;
 		pointer-events: none;

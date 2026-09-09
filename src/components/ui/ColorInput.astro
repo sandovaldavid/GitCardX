@@ -26,9 +26,10 @@ const { id, label, value } = Astro.props;
 	input[type='color'] {
 		width: 44px;
 		height: 44px;
-		border: none;
+		border: 1px solid var(--medium-gray);
 		border-radius: 6px;
 		cursor: pointer;
+		background-color: transparent;
 	}
 
 	input[type='color']::-webkit-color-swatch-wrapper {
@@ -41,8 +42,8 @@ const { id, label, value } = Astro.props;
 	}
 
 	.color-value {
-		font-family: monospace;
+		font-family: var(--mono-font);
 		font-size: 14px;
-		color: #666;
+		color: var(--label-color);
 	}
 </style>

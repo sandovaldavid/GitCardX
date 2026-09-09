@@ -41,6 +41,28 @@ export const imageStore = map<ImageData>({
 	backgroundOpacity: DEFAULT_BG_OPACITY,
 });
 
+// CI Pipeline / Status Graph world: each smart panel is a pipeline "stage"
+// and reports its own real field validity here. The stage-rail widget in
+// index.astro reads this store to render each stage's pill; it never
+// re-runs validation itself, it only reflects what the owning panel found.
+export type StageStatus = 'pending' | 'running' | 'passing' | 'failing';
+
+export interface StageStatusData {
+	configure: StageStatus;
+	style: StageStatus;
+	assets: StageStatus;
+}
+
+export const stageStatusStore = map<StageStatusData>({
+	configure: 'pending',
+	style: 'pending',
+	assets: 'pending',
+});
+
+export function setStageStatus(stage: keyof StageStatusData, status: StageStatus): void {
+	stageStatusStore.setKey(stage, status);
+}
+
 export type ToastType = 'success' | 'error' | 'warning' | 'info';
 
 export interface Toast {

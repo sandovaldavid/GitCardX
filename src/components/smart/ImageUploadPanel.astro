@@ -3,15 +3,19 @@ import FileDropzone from '../ui/FileDropzone.astro';
 import OpacitySlider from '../ui/OpacitySlider.astro';
 ---
 
-<div class="panel-section mb-8 border-b border-medium-gray pb-6 last:mb-0 last:border-b-0 last:pb-0">
-	<h2><i class="fas fa-image"></i> Images</h2>
+<div class="panel-section stage-panel mb-8 border-b border-medium-gray pb-6 last:mb-0 last:border-b-0 last:pb-0">
+	<h2>
+		<i class="fas fa-image"></i> Images
+		<span class="stage-pill stage-pill--pending" id="assetsStagePill">Assets — pending</span>
+	</h2>
 	<FileDropzone id="projectLogo" label="Project Logo:" />
 	<FileDropzone id="bgImage" label="Background Image:" removable removeId="removeBgImage" />
 	<OpacitySlider />
 </div>
 
 <script>
-	import { imageStore, pushToast } from '../../stores/cardState';
+	import { imageStore, pushToast, setStageStatus, stageStatusStore } from '../../stores/cardState';
+	import type { StageStatus } from '../../stores/cardState';
 	import { validateImageFile } from '../../utils/validators';
 
 	const projectLogoInput = document.getElementById('projectLogo') as HTMLInputElement;
@@ -24,6 +28,28 @@ import OpacitySlider from '../ui/OpacitySlider.astro';
 	const bgOpacityValue = document.getElementById('bgOpacityValue') as HTMLElement;
 	const logoContainer = document.getElementById('logoContainer') as HTMLElement | null;
 	const card = document.getElementById('githubCard') as HTMLElement | null;
+	const assetsStagePill = document.getElementById('assetsStagePill') as HTMLElement | null;
+
+	// "assets" stage validity: images are optional, and an invalid file is
+	// never committed to imageStore, so the only thing to track beyond "is
+	// anything uploaded yet" is whether the most recent file attempt raised a
+	// validation error.
+	// ponytail: one shared flag for both dropzones, not per-slot error
+	// tracking — fixing one slot's file can mask a still-outstanding error on
+	// the other. Split into per-id flags if that edge case starts mattering.
+	let hasFileError = false;
+
+	function computeAssetsStatus(): StageStatus {
+		if (hasFileError) return 'failing';
+		const state = imageStore.get();
+		return state.logoDataUrl || state.backgroundDataUrl ? 'passing' : 'pending';
+	}
+
+	stageStatusStore.subscribe((state) => {
+		if (!assetsStagePill) return;
+		assetsStagePill.className = `stage-pill stage-pill--${state.assets}`;
+		assetsStagePill.textContent = `Assets — ${state.assets}`;
+	});
 
 	function readFileAsDataURL(file: File): Promise<string> {
 		return new Promise((resolve, reject) => {
@@ -39,12 +65,16 @@ import OpacitySlider from '../ui/OpacitySlider.astro';
 		const validation = validateImageFile(file);
 		if (!validation.isValid) {
 			pushToast(validation.message ?? 'Invalid file', 'error');
+			hasFileError = true;
+			setStageStatus('assets', computeAssetsStatus());
 			return;
 		}
+		hasFileError = false;
 		const dataUrl = await readFileAsDataURL(file);
 		imageStore.setKey('logoDataUrl', dataUrl);
 		imageStore.setKey('logoName', file.name);
 		projectLogoFileName.textContent = file.name;
+		setStageStatus('assets', computeAssetsStatus());
 	}
 
 	async function handleBackgroundFile(file: File | undefined) {
@@ -52,12 +82,16 @@ import OpacitySlider from '../ui/OpacitySlider.astro';
 		const validation = validateImageFile(file);
 		if (!validation.isValid) {
 			pushToast(validation.message ?? 'Invalid file', 'error');
+			hasFileError = true;
+			setStageStatus('assets', computeAssetsStatus());
 			return;
 		}
+		hasFileError = false;
 		const dataUrl = await readFileAsDataURL(file);
 		imageStore.setKey('backgroundDataUrl', dataUrl);
 		imageStore.setKey('backgroundName', file.name);
 		bgImageFileName.textContent = file.name;
+		setStageStatus('assets', computeAssetsStatus());
 	}
 
 	projectLogoInput.addEventListener('change', () => handleLogoFile(projectLogoInput.files?.[0]));
@@ -68,6 +102,7 @@ import OpacitySlider from '../ui/OpacitySlider.astro';
 		imageStore.setKey('backgroundName', null);
 		bgImageInput.value = '';
 		bgImageFileName.textContent = 'No file chosen';
+		setStageStatus('assets', computeAssetsStatus());
 	});
 
 	bgOpacitySlider.addEventListener('input', () => {
@@ -111,4 +146,22 @@ import OpacitySlider from '../ui/OpacitySlider.astro';
 		bgOpacitySlider.value = String(percent);
 		bgOpacityValue.textContent = `${percent}%`;
 	});
+
+	// Initial status (also covers a localStorage-restored session, since
+	// imageStore.subscribe above already fired once with the restored state).
+	setStageStatus('assets', computeAssetsStatus());
 </script>
+
+<style>
+	.stage-panel {
+		background-color: var(--neutral-bg);
+		border: 1px solid var(--medium-gray);
+		border-radius: 12px;
+		padding: 1.5rem;
+	}
+
+	.stage-panel h2 {
+		flex-wrap: wrap;
+		row-gap: 8px;
+	}
+</style>

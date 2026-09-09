@@ -53,23 +53,27 @@ const fileNameId = `${id}FileName`;
 		min-height: 44px;
 		background-color: var(--neutral-bg);
 		color: var(--body-color);
+		border: 1px solid var(--medium-gray);
 		border-radius: 6px;
 		cursor: pointer;
 		font-weight: 500;
-		transition: background-color 0.2s;
+		transition:
+			background-color 0.2s,
+			border-color 0.2s;
 	}
 	.file-input-label:hover {
 		background-color: var(--neutral-bg-hover);
+		border-color: var(--primary-color);
 	}
 
 	.file-name {
 		font-size: 14px;
-		color: #666;
+		color: var(--label-color);
 	}
 
 	.small-button {
 		background-color: var(--danger-color);
-		color: white;
+		color: var(--light-gray);
 		padding: 6px 10px;
 		min-height: 44px;
 		font-size: 0.8rem;

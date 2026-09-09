@@ -23,7 +23,7 @@ const initialPercent = Math.round(DEFAULT_BG_OPACITY * 100);
 		flex-grow: 1;
 		height: 6px;
 		appearance: none;
-		background: linear-gradient(to right, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 1));
+		background: var(--medium-gray);
 		border-radius: 3px;
 		outline: none;
 		/* Extra vertical padding widens the track's touch/click hit area to
@@ -34,7 +34,7 @@ const initialPercent = Math.round(DEFAULT_BG_OPACITY * 100);
 
 	.opacity-slider:focus {
 		outline: none;
-		box-shadow: 0 0 0 3px rgba(46, 164, 79, 0.1);
+		box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb), 0.25);
 	}
 
 	.opacity-slider::-webkit-slider-thumb {
@@ -45,7 +45,7 @@ const initialPercent = Math.round(DEFAULT_BG_OPACITY * 100);
 		background: var(--primary-color);
 		cursor: pointer;
 		border: none;
-		box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.35);
 		transition: background 0.2s;
 	}
 
@@ -56,7 +56,7 @@ const initialPercent = Math.round(DEFAULT_BG_OPACITY * 100);
 		background: var(--primary-color);
 		cursor: pointer;
 		border: none;
-		box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.35);
 		transition: background 0.2s;
 	}
 
@@ -67,6 +67,6 @@ const initialPercent = Math.round(DEFAULT_BG_OPACITY * 100);
 	.opacity-value {
 		min-width: 40px;
 		font-weight: 500;
-		color: #666;
+		color: var(--label-color);
 	}
 </style>

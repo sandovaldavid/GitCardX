@@ -2,61 +2,67 @@
 import { DEFAULT_CARD } from '../../constants/defaults';
 ---
 
-<div class="panel-section mb-8 border-b border-medium-gray pb-6 last:mb-0 last:border-b-0 last:pb-0">
-	<h2><i class="fas fa-user"></i> GitHub Profile</h2>
-	<div class="control-group mb-4 last:mb-0">
-		<label for="username" class="block mb-2 font-medium text-label">GitHub Username:</label>
-		<div class="input-with-button">
+<div class="stage-panel">
+	<div class="panel-section mb-8 border-b border-medium-gray pb-6 last:mb-0 last:border-b-0 last:pb-0">
+		<h2>
+			<i class="fas fa-user"></i> GitHub Profile
+			<span class="stage-pill stage-pill--pending" id="configureStagePill">Configure — pending</span>
+		</h2>
+		<div class="control-group mb-4 last:mb-0">
+			<label for="username" class="block mb-2 font-medium text-label">GitHub Username:</label>
+			<div class="input-with-button">
+				<input
+					type="text"
+					id="username"
+					placeholder="Enter your GitHub username"
+					maxlength="39"
+				/>
+				<button id="loadProfile" class="action-button" type="button">
+					<i class="fas fa-download"></i> Load
+				</button>
+			</div>
+		</div>
+	</div>
+
+	<div class="panel-section mb-8 border-b border-medium-gray pb-6 last:mb-0 last:border-b-0 last:pb-0">
+		<h2><i class="fas fa-project-diagram"></i> Project Information</h2>
+		<div class="control-group mb-4 last:mb-0">
+			<label for="repoName" class="block mb-2 font-medium text-label">Repository Name:</label>
 			<input
 				type="text"
-				id="username"
-				placeholder="Enter your GitHub username"
-				maxlength="39"
+				id="repoName"
+				placeholder="Enter repository name"
+				value={DEFAULT_CARD.repoName}
+				maxlength="100"
 			/>
-			<button id="loadProfile" class="action-button" type="button">
-				<i class="fas fa-download"></i> Load
-			</button>
+		</div>
+
+		<div class="control-group mb-4 last:mb-0">
+			<label for="projectName" class="block mb-2 font-medium text-label">Project Name:</label>
+			<input
+				type="text"
+				id="projectName"
+				placeholder="Enter project name"
+				value={DEFAULT_CARD.projectName}
+				maxlength="50"
+			/>
+		</div>
+
+		<div class="control-group mb-4 last:mb-0">
+			<label for="projectDescription" class="block mb-2 font-medium text-label">Project Description:</label>
+			<textarea
+				id="projectDescription"
+				placeholder="Enter project description"
+				rows="4"
+				maxlength="280">{DEFAULT_CARD.projectDescription}</textarea
+			>
 		</div>
 	</div>
 </div>
 
-<div class="panel-section mb-8 border-b border-medium-gray pb-6 last:mb-0 last:border-b-0 last:pb-0">
-	<h2><i class="fas fa-project-diagram"></i> Project Information</h2>
-	<div class="control-group mb-4 last:mb-0">
-		<label for="repoName" class="block mb-2 font-medium text-label">Repository Name:</label>
-		<input
-			type="text"
-			id="repoName"
-			placeholder="Enter repository name"
-			value={DEFAULT_CARD.repoName}
-			maxlength="100"
-		/>
-	</div>
-
-	<div class="control-group mb-4 last:mb-0">
-		<label for="projectName" class="block mb-2 font-medium text-label">Project Name:</label>
-		<input
-			type="text"
-			id="projectName"
-			placeholder="Enter project name"
-			value={DEFAULT_CARD.projectName}
-			maxlength="50"
-		/>
-	</div>
-
-	<div class="control-group mb-4 last:mb-0">
-		<label for="projectDescription" class="block mb-2 font-medium text-label">Project Description:</label>
-		<textarea
-			id="projectDescription"
-			placeholder="Enter project description"
-			rows="4"
-			maxlength="280">{DEFAULT_CARD.projectDescription}</textarea
-		>
-	</div>
-</div>
-
 <script>
-	import { cardStore, pushToast } from '../../stores/cardState';
+	import { cardStore, pushToast, setStageStatus, stageStatusStore } from '../../stores/cardState';
+	import type { StageStatus } from '../../stores/cardState';
 	import { getUser } from '../../lib/github';
 	import {
 		validateGitHubUsername,
@@ -70,6 +76,7 @@ import { DEFAULT_CARD } from '../../constants/defaults';
 	const projectNameInput = document.getElementById('projectName') as HTMLInputElement;
 	const projectDescriptionInput = document.getElementById('projectDescription') as HTMLTextAreaElement;
 	const loadProfileBtn = document.getElementById('loadProfile') as HTMLButtonElement;
+	const configureStagePill = document.getElementById('configureStagePill') as HTMLElement | null;
 
 	// Reflect current store state into inputs (e.g. after autosave restore).
 	cardStore.subscribe((state) => {
@@ -81,29 +88,60 @@ import { DEFAULT_CARD } from '../../constants/defaults';
 		}
 	});
 
+	// "configure" stage validity: username is the only required field (a
+	// blank username is the panel's untouched/pending state); repoName,
+	// projectName and projectDescription are all optional per validators.ts
+	// (empty passes), so they only ever fail once something invalid is typed.
+	function computeConfigureStatus(): StageStatus {
+		if (usernameInput.value.trim() === '') return 'pending';
+
+		const results = [
+			validateGitHubUsername(usernameInput.value),
+			validateRepoName(repoNameInput.value),
+			validateProjectName(projectNameInput.value),
+			validateDescription(projectDescriptionInput.value),
+		];
+		return results.every((result) => result.isValid) ? 'passing' : 'failing';
+	}
+
+	// The local pill only renders what stageStatusStore holds — it never
+	// computes its own status — so it always agrees with the stage-rail
+	// widget in index.astro, which reads the same store.
+	stageStatusStore.subscribe((state) => {
+		if (!configureStagePill) return;
+		configureStagePill.className = `stage-pill stage-pill--${state.configure}`;
+		configureStagePill.textContent = `Configure — ${state.configure}`;
+	});
+
 	repoNameInput.addEventListener('input', () => {
 		const validation = validateRepoName(repoNameInput.value);
 		if (!validation.isValid) {
 			pushToast(validation.message ?? 'Invalid repository name', 'error');
+			setStageStatus('configure', computeConfigureStatus());
 			return;
 		}
 		cardStore.setKey('repoName', repoNameInput.value);
+		setStageStatus('configure', computeConfigureStatus());
 	});
 	projectNameInput.addEventListener('input', () => {
 		const validation = validateProjectName(projectNameInput.value);
 		if (!validation.isValid) {
 			pushToast(validation.message ?? 'Invalid project name', 'error');
+			setStageStatus('configure', computeConfigureStatus());
 			return;
 		}
 		cardStore.setKey('projectName', projectNameInput.value);
+		setStageStatus('configure', computeConfigureStatus());
 	});
 	projectDescriptionInput.addEventListener('input', () => {
 		const validation = validateDescription(projectDescriptionInput.value);
 		if (!validation.isValid) {
 			pushToast(validation.message ?? 'Invalid description', 'error');
+			setStageStatus('configure', computeConfigureStatus());
 			return;
 		}
 		cardStore.setKey('projectDescription', projectDescriptionInput.value);
+		setStageStatus('configure', computeConfigureStatus());
 	});
 	usernameInput.addEventListener('input', () => {
 		const validation = validateGitHubUsername(usernameInput.value);
@@ -111,7 +149,12 @@ import { DEFAULT_CARD } from '../../constants/defaults';
 			pushToast(validation.message ?? 'Invalid username', 'error');
 		}
 		cardStore.setKey('username', usernameInput.value);
+		setStageStatus('configure', computeConfigureStatus());
 	});
+
+	// Initial status: DOM inputs already carry their SSR/localStorage-restored
+	// values by this point (cardStore.subscribe above ran synchronously).
+	setStageStatus('configure', computeConfigureStatus());
 
 	loadProfileBtn.addEventListener('click', async () => {
 		const username = usernameInput.value.trim();
@@ -132,6 +175,7 @@ import { DEFAULT_CARD } from '../../constants/defaults';
 				avatarUrl: user.avatar_url,
 				profileLoaded: true,
 			});
+			setStageStatus('configure', computeConfigureStatus());
 			pushToast('Profile loaded successfully', 'success');
 		} catch (error) {
 			pushToast(`Error: ${error instanceof Error ? error.message : String(error)}`, 'error');
@@ -143,10 +187,24 @@ import { DEFAULT_CARD } from '../../constants/defaults';
 </script>
 
 <style>
+	.stage-panel {
+		background-color: var(--neutral-bg);
+		border: 1px solid var(--medium-gray);
+		border-radius: 12px;
+		padding: 1.5rem;
+	}
+
+	.stage-panel h2 {
+		flex-wrap: wrap;
+		row-gap: 8px;
+	}
+
 	input[type='text'],
 	textarea {
 		width: 100%;
 		padding: 10px;
+		background-color: var(--light-gray);
+		color: var(--body-color);
 		border: 1px solid var(--medium-gray);
 		border-radius: 6px;
 		font-size: 14px;
@@ -157,7 +215,7 @@ import { DEFAULT_CARD } from '../../constants/defaults';
 	textarea:focus {
 		border-color: var(--primary-color);
 		outline: none;
-		box-shadow: 0 0 0 3px rgba(46, 164, 79, 0.1);
+		box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb), 0.15);
 	}
 
 	.input-with-button {
@@ -169,11 +227,11 @@ import { DEFAULT_CARD } from '../../constants/defaults';
 	}
 
 	.action-button {
-		background-color: var(--neutral-bg);
+		background-color: var(--neutral-bg-hover);
 		color: var(--body-color);
 		padding: 10px 15px;
 		min-height: 44px;
-		border: none;
+		border: 1px solid var(--medium-gray);
 		border-radius: 6px;
 		cursor: pointer;
 		font-weight: 500;
@@ -183,6 +241,6 @@ import { DEFAULT_CARD } from '../../constants/defaults';
 		gap: 8px;
 	}
 	.action-button:hover {
-		background-color: var(--neutral-bg-hover);
+		border-color: var(--primary-color);
 	}
 </style>

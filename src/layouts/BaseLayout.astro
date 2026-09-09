@@ -15,7 +15,7 @@ const { title = 'GitCardX' } = Astro.props;
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<title>{title}</title>
 		<link
-			href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap"
+			href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
 			rel="stylesheet"
 		/>
 		<link rel="icon" href="/images/logo-github-card-generator.webp" />
@@ -25,6 +25,24 @@ const { title = 'GitCardX' } = Astro.props;
 		/>
 	</head>
 	<body>
+		<!--
+THESIS: Building a card is a pipeline, not a form — filling fields in reads
+like watching a GitHub Actions run turn from pending to passing.
+OWN-WORLD: near-black graphite (#0b0d10), teal (#2dd4bf) as the one active/
+build accent, semantic status pills (gray pending, amber running, green
+passing, red failing) driving real field validity, JetBrains Mono for stage
+labels/status text, Manrope for prose and headings.
+STORY: a visitor recognizes the shape of a CI run instantly; each panel is a
+pipeline "stage," the live card preview is the run's build artifact.
+FIRST VIEWPORT: a stage-rail (horizontal desktop, vertical mobile) linking
+Configure → Style → Assets nodes into the card-preview artifact node, each
+node's pill reflecting that panel's real validity.
+FORM: seed key ccac258b, candidate 3 of 7 (CI Pipeline / Status Graph),
+user's own top pick over the assigned PCB/circuit direction and the
+standard safe default.
+FINISH: unreviewed and undocumented is unfinished; this build ends with the
+finish review, the verdict, and DESIGN.md
+-->
 		<slot />
 	</body>
 </html>

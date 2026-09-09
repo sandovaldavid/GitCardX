@@ -23,6 +23,32 @@ import CardPreview from '../components/ui/CardPreview.astro';
 	</header>
 
 	<main class="container">
+		<section class="stage-rail" aria-label="Build pipeline status">
+			<ol class="stage-rail-track">
+				<li class="rail-node" data-stage="configure" data-status="pending">
+					<span class="rail-node-dot"></span>
+					<span class="rail-node-label">Configure</span>
+					<span class="stage-pill stage-pill--pending" data-pill="configure">pending</span>
+				</li>
+				<li class="rail-connector" aria-hidden="true"></li>
+				<li class="rail-node" data-stage="style" data-status="pending">
+					<span class="rail-node-dot"></span>
+					<span class="rail-node-label">Style</span>
+					<span class="stage-pill stage-pill--pending" data-pill="style">pending</span>
+				</li>
+				<li class="rail-connector" aria-hidden="true"></li>
+				<li class="rail-node" data-stage="assets" data-status="pending">
+					<span class="rail-node-dot"></span>
+					<span class="rail-node-label">Assets</span>
+					<span class="stage-pill stage-pill--pending" data-pill="assets">pending</span>
+				</li>
+			</ol>
+			<div class="rail-terminus" data-status="pending" aria-hidden="true">
+				<span class="rail-terminus-arrow">↓</span>
+				<span class="rail-terminus-label">feeds the build artifact below</span>
+			</div>
+		</section>
+
 		<div class="app-layout">
 			<div class="side-panel left-panel">
 				<CardEditorPanel />
@@ -46,7 +72,7 @@ import CardPreview from '../components/ui/CardPreview.astro';
 
 	<footer class="app-footer">
 		<div class="footer-content">
-			<div class="footer-logo animate-on-scroll">
+			<div class="footer-logo">
 				<img
 					src="/images/logo-github-card-generator.webp"
 					alt="Logo"
@@ -57,7 +83,7 @@ import CardPreview from '../components/ui/CardPreview.astro';
 				<h3>GitCardX</h3>
 			</div>
 
-			<div class="footer-links animate-on-scroll">
+			<div class="footer-links">
 				<h4>Links</h4>
 				<ul>
 					<li>
@@ -75,7 +101,7 @@ import CardPreview from '../components/ui/CardPreview.astro';
 				</ul>
 			</div>
 
-			<div class="footer-social animate-on-scroll">
+			<div class="footer-social">
 				<h4>Connect</h4>
 				<div class="social-icons">
 					<a
@@ -99,14 +125,6 @@ import CardPreview from '../components/ui/CardPreview.astro';
 				</div>
 			</div>
 
-			<div class="footer-newsletter animate-on-scroll">
-				<h4>Newsletter</h4>
-				<p>Receive updates and news from this page</p>
-				<div class="newsletter-form">
-					<input type="email" placeholder="Your email" class="newsletter-input" />
-					<button class="newsletter-button"><i class="fas fa-paper-plane"></i></button>
-				</div>
-			</div>
 		</div>
 
 		<div class="footer-bottom">
@@ -121,7 +139,8 @@ import CardPreview from '../components/ui/CardPreview.astro';
 </BaseLayout>
 
 <script>
-	import { cardStore, colorStore, imageStore } from '../stores/cardState';
+	import { cardStore, colorStore, imageStore, stageStatusStore } from '../stores/cardState';
+	import type { StageStatus } from '../stores/cardState';
 	import { load, save } from '../lib/storage';
 	import { AUTOSAVE_DEBOUNCE_MS } from '../constants/defaults';
 
@@ -142,26 +161,74 @@ import CardPreview from '../components/ui/CardPreview.astro';
 	const currentYear = document.getElementById('current-year');
 	if (currentYear) currentYear.textContent = String(new Date().getFullYear());
 
-	const elementsToAnimate = document.querySelectorAll('.animate-on-scroll');
-	const observer = new IntersectionObserver(
-		(entries) => {
-			for (const entry of entries) {
-				if (entry.isIntersecting) {
-					entry.target.classList.add('appear');
-					observer.unobserve(entry.target);
-				}
-			}
-		},
-		{ threshold: 0.1, rootMargin: '0px 0px -50px 0px' }
-	);
-	elementsToAnimate.forEach((element) => observer.observe(element));
+	// Stage-rail: reflects each panel's own reported validity from
+	// stageStatusStore live, and derives the 4th "Build" node from the same
+	// three keys rather than adding a new store field.
+	type ConfigStage = 'configure' | 'style' | 'assets';
+	const CONFIG_STAGES: ConfigStage[] = ['configure', 'style', 'assets'];
+
+	const RAIL_LABELS: Record<StageStatus, string> = {
+		pending: 'pending',
+		running: 'validating',
+		passing: 'passing',
+		failing: 'failing',
+	};
+
+	function pulseRailNode(dot: Element | null) {
+		if (!dot) return;
+		dot.classList.remove('rail-node-pulse');
+		// Force reflow so re-adding the class restarts the animation on rapid
+		// consecutive status flips.
+		void (dot as HTMLElement).offsetWidth;
+		dot.classList.add('rail-node-pulse');
+		window.setTimeout(() => dot.classList.remove('rail-node-pulse'), 900);
+	}
+
+	function renderRailNode(stage: ConfigStage, status: StageStatus, shouldPulse: boolean) {
+		const node = document.querySelector(`.rail-node[data-stage="${stage}"]`);
+		if (!node) return;
+		node.setAttribute('data-status', status);
+		const pill = node.querySelector('[data-pill]');
+		if (pill) {
+			pill.className = `stage-pill stage-pill--${status}`;
+			pill.textContent = RAIL_LABELS[status];
+		}
+		if (shouldPulse) pulseRailNode(node.querySelector('.rail-node-dot'));
+	}
+
+	function deriveBuildStatus(state: Record<ConfigStage, StageStatus>): StageStatus {
+		if (CONFIG_STAGES.every((stage) => state[stage] === 'passing')) return 'passing';
+		if (CONFIG_STAGES.some((stage) => state[stage] === 'running')) return 'running';
+		if (CONFIG_STAGES.some((stage) => state[stage] === 'failing')) return 'failing';
+		return 'pending';
+	}
+
+	// The terminus is where the rail actually ends — it drives its own arrow
+	// color and (via the identical derivation running independently in
+	// CardPreview.astro, both reading the same stageStatusStore) the card
+	// preview's own "BUILD ARTIFACT" tag lights up in sync, so the pipeline
+	// visibly terminates at the real artifact instead of a duplicate pill.
+	const railTerminus = document.querySelector('.rail-terminus');
+
+	stageStatusStore.subscribe((state, _oldState, changedKey) => {
+		if (changedKey) {
+			renderRailNode(changedKey, state[changedKey], true);
+		} else {
+			CONFIG_STAGES.forEach((stage) => renderRailNode(stage, state[stage], false));
+		}
+
+		if (railTerminus) railTerminus.setAttribute('data-status', deriveBuildStatus(state));
+	});
 </script>
 
 <style>
 	.app-header {
 		display: flex;
 		justify-content: center;
-		margin-top: 30px;
+		align-items: center;
+		background-color: var(--neutral-bg);
+		border-bottom: 1px solid var(--medium-gray);
+		padding: 1.25rem 0;
 	}
 
 	.logo-container {
@@ -184,7 +251,7 @@ import CardPreview from '../components/ui/CardPreview.astro';
 	h1 {
 		font-size: 2.25rem;
 		margin: 0;
-		color: var(--border-color);
+		color: var(--body-color);
 	}
 
 	@media (max-width: 768px) {
@@ -192,7 +259,7 @@ import CardPreview from '../components/ui/CardPreview.astro';
 			flex-direction: column;
 			align-items: center;
 			text-align: center;
-			margin: 20px 0;
+			padding: 1rem 0;
 		}
 		.logo-container {
 			justify-content: center;
@@ -216,6 +283,124 @@ import CardPreview from '../components/ui/CardPreview.astro';
 		}
 	}
 
+	.stage-rail {
+		margin-top: 2rem;
+	}
+
+	.stage-rail-track {
+		display: flex;
+		align-items: center;
+		list-style: none;
+		margin: 0;
+		padding: 1.25rem 1.5rem;
+		background-color: var(--neutral-bg);
+		border: 1px solid var(--medium-gray);
+		border-radius: 12px;
+	}
+
+	.rail-node {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.4rem;
+		flex: 1 1 0;
+		min-width: 0;
+	}
+
+	.rail-node-dot {
+		width: 14px;
+		height: 14px;
+		border-radius: 50%;
+		background-color: var(--status-pending);
+		box-shadow: 0 0 0 4px color-mix(in srgb, var(--status-pending) 18%, transparent);
+		transition:
+			background-color 0.25s ease,
+			box-shadow 0.25s ease;
+	}
+
+	.rail-node[data-status='running'] .rail-node-dot {
+		background-color: var(--status-running);
+		box-shadow: 0 0 0 4px color-mix(in srgb, var(--status-running) 18%, transparent);
+	}
+	.rail-node[data-status='passing'] .rail-node-dot {
+		background-color: var(--status-passing);
+		box-shadow: 0 0 0 4px color-mix(in srgb, var(--status-passing) 18%, transparent);
+	}
+	.rail-node[data-status='failing'] .rail-node-dot {
+		background-color: var(--status-failing);
+		box-shadow: 0 0 0 4px color-mix(in srgb, var(--status-failing) 18%, transparent);
+	}
+
+	.rail-node-label {
+		font-family: var(--font-mono);
+		font-size: 0.7rem;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--label-color);
+	}
+
+	.rail-connector {
+		flex: 0 0 48px;
+		height: 2px;
+		background-color: var(--medium-gray);
+		align-self: center;
+		margin: 0 -0.25rem;
+	}
+
+	@media (max-width: 768px) {
+		.stage-rail-track {
+			flex-direction: column;
+			align-items: stretch;
+			gap: 0;
+		}
+		.rail-node {
+			flex-direction: row;
+			justify-content: flex-start;
+			gap: 0.75rem;
+			width: 100%;
+		}
+		.rail-connector {
+			flex: 0 0 auto;
+			width: 2px;
+			height: 24px;
+			margin: 2px 0 2px 6px;
+		}
+	}
+
+	/* The rail's actual endpoint: it doesn't stop at another pill, it points
+	   straight down into the live card preview below, which lights up its own
+	   "BUILD ARTIFACT" tag from the same store (see CardPreview.astro). */
+	.rail-terminus {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.5rem;
+		margin-top: 0.75rem;
+		padding-top: 0.75rem;
+		border-top: 1px dashed var(--medium-gray);
+		font-family: var(--font-mono);
+		font-size: 0.7rem;
+		letter-spacing: 0.04em;
+		text-transform: uppercase;
+		color: var(--label-color);
+	}
+
+	.rail-terminus-arrow {
+		font-size: 0.9rem;
+		color: var(--status-pending);
+		transition: color 0.25s ease;
+	}
+
+	.rail-terminus[data-status='running'] .rail-terminus-arrow {
+		color: var(--status-running);
+	}
+	.rail-terminus[data-status='passing'] .rail-terminus-arrow {
+		color: var(--status-passing);
+	}
+	.rail-terminus[data-status='failing'] .rail-terminus-arrow {
+		color: var(--status-failing);
+	}
+
 	.app-layout {
 		display: grid;
 		grid-template-columns: 3fr 5fr 2fr;
@@ -225,11 +410,12 @@ import CardPreview from '../components/ui/CardPreview.astro';
 	}
 
 	.side-panel {
-		background-color: white;
+		background-color: var(--neutral-bg);
+		border: 1px solid var(--medium-gray);
 		border-radius: 12px;
 		padding: 1.5rem;
 		height: fit-content;
-		box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+		box-shadow: 0 4px 15px rgba(0, 0, 0, 0.35);
 	}
 
 	.center-panel {
@@ -314,12 +500,11 @@ import CardPreview from '../components/ui/CardPreview.astro';
 	.footer-logo h3 {
 		font-size: 1.4rem;
 		margin: 0;
-		color: var(--border-color);
+		color: var(--primary-color);
 	}
 
 	.footer-links h4,
-	.footer-social h4,
-	.footer-newsletter h4 {
+	.footer-social h4 {
 		color: white;
 		margin-bottom: 1.2rem;
 		position: relative;
@@ -328,23 +513,21 @@ import CardPreview from '../components/ui/CardPreview.astro';
 	}
 
 	.footer-links h4::after,
-	.footer-social h4::after,
-	.footer-newsletter h4::after {
+	.footer-social h4::after {
 		content: '';
 		position: absolute;
 		bottom: 0;
 		left: 0;
 		width: 60px;
 		height: 3px;
-		background-color: var(--border-color);
+		background-color: var(--primary-color);
 		transform: scaleX(0.6667);
 		transform-origin: left;
 		transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 	}
 
 	.footer-links:hover h4::after,
-	.footer-social:hover h4::after,
-	.footer-newsletter:hover h4::after {
+	.footer-social:hover h4::after {
 		transform: scaleX(1);
 	}
 
@@ -372,7 +555,7 @@ import CardPreview from '../components/ui/CardPreview.astro';
 		transform: translateX(8px);
 	}
 	.footer-link i {
-		color: var(--border-color);
+		color: var(--primary-color);
 		font-size: 0.9rem;
 	}
 
@@ -406,7 +589,7 @@ import CardPreview from '../components/ui/CardPreview.astro';
 		left: 0;
 		width: 100%;
 		height: 100%;
-		background-color: var(--border-color);
+		background-color: var(--primary-color);
 		transform: translateY(100%);
 		transition: transform 0.3s ease;
 		z-index: 1;
@@ -419,47 +602,15 @@ import CardPreview from '../components/ui/CardPreview.astro';
 
 	.social-icon:hover {
 		transform: translateY(-5px);
-		box-shadow: 0 5px 15px rgba(0, 160, 255, 0.3);
+		box-shadow: 0 5px 15px rgba(var(--primary-color-rgb), 0.3);
 	}
 	.social-icon:hover::before {
 		transform: translateY(0);
 	}
-
-	.footer-newsletter p {
-		color: #aaa;
-		margin-bottom: 1rem;
-	}
-
-	.newsletter-form {
-		display: flex;
-		max-width: 100%;
-	}
-
-	.newsletter-input {
-		padding: 0.8rem;
-		border-radius: 6px 0 0 6px;
-		border: none;
-		background-color: rgba(255, 255, 255, 0.1);
-		color: white;
-		flex-grow: 1;
-	}
-	.newsletter-input:focus {
-		outline: none;
-		box-shadow: 0 0 0 2px rgba(0, 160, 255, 0.3);
-	}
-
-	.newsletter-button {
-		padding: 0.8rem 1.2rem;
-		border: none;
-		background-color: var(--border-color);
-		color: white;
-		border-radius: 0 6px 6px 0;
-		cursor: pointer;
-		transition: all 0.3s ease;
-	}
-	.newsletter-button:hover {
-		background-color: #0086d4;
-		transform: translateX(3px);
+	/* Teal is a light accent; swap the icon glyph to a dark tone once it's
+	   painted over so it keeps AA contrast against its own hover fill. */
+	.social-icon:hover i {
+		color: var(--dark-gray);
 	}
 
 	.footer-bottom {
@@ -472,7 +623,7 @@ import CardPreview from '../components/ui/CardPreview.astro';
 		color: #b3b3b3;
 	}
 	.footer-bottom a {
-		color: var(--border-color);
+		color: var(--primary-color);
 		text-decoration: none;
 		font-weight: 500;
 		transition: color 0.3s ease;
@@ -485,18 +636,12 @@ import CardPreview from '../components/ui/CardPreview.astro';
 		.footer-content {
 			grid-template-columns: repeat(3, 1fr);
 		}
-		.footer-newsletter {
-			grid-column: span 3;
-		}
 	}
 
 	@media (max-width: 992px) {
 		.footer-content {
 			grid-template-columns: repeat(2, 1fr);
 			gap: 3rem 2rem;
-		}
-		.footer-newsletter {
-			grid-column: span 2;
 		}
 	}
 
@@ -511,12 +656,6 @@ import CardPreview from '../components/ui/CardPreview.astro';
 		}
 		.footer-content {
 			grid-template-columns: 1fr;
-		}
-		.footer-newsletter {
-			grid-column: span 1;
-		}
-		.newsletter-form {
-			max-width: 100%;
 		}
 		.social-icons {
 			justify-content: center;

@@ -34,7 +34,9 @@
 		position: relative;
 		padding: 12px 20px;
 		border-radius: 8px;
-		color: white;
+		/* Status-token backgrounds below are mid-to-bright; dark ink clears
+		   4.5:1 against all four (white text does not — see contrast notes). */
+		color: var(--light-gray);
 		font-weight: 500;
 		display: flex;
 		align-items: center;
@@ -61,16 +63,16 @@
 	}
 
 	.notification.success {
-		background-color: #2ecc71;
+		background-color: var(--status-passing);
 	}
 	.notification.error {
 		background-color: var(--danger-color);
 	}
 	.notification.warning {
-		background-color: #f39c12;
+		background-color: var(--status-running);
 	}
 	.notification.info {
-		background-color: #3498db;
+		background-color: var(--primary-color);
 	}
 
 	.notification .close-btn {
@@ -84,13 +86,13 @@
 		min-height: 44px;
 		background: transparent;
 		border: none;
-		color: rgba(255, 255, 255, 0.6);
+		color: color-mix(in srgb, var(--light-gray) 60%, transparent);
 		font-size: 12px;
 		cursor: pointer;
 		line-height: 1;
 	}
 	.notification .close-btn:hover {
-		color: white;
+		color: var(--light-gray);
 	}
 
 	.notification .content {

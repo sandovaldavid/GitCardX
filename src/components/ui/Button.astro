@@ -36,7 +36,7 @@ const { id, variant = 'action', class: className } = Astro.props;
 
 	.btn-primary {
 		background-color: var(--primary-color);
-		color: white;
+		color: var(--light-gray);
 		padding: 12px 18px;
 		font-size: 16px;
 	}
@@ -57,17 +57,17 @@ const { id, variant = 'action', class: className } = Astro.props;
 	}
 
 	.btn-reset {
-		background-color: var(--light-gray);
-		color: #666;
+		background-color: var(--neutral-bg);
+		color: var(--label-color);
 	}
 	.btn-reset:hover {
 		background-color: var(--neutral-bg-hover);
-		color: #444;
+		color: var(--body-color);
 	}
 
 	.btn-small {
 		background-color: var(--danger-color);
-		color: white;
+		color: var(--light-gray);
 		padding: 6px 10px;
 		min-height: 44px;
 		font-size: 0.8rem;
