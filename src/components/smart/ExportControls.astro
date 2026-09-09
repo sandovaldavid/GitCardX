@@ -45,7 +45,7 @@ import Button from '../ui/Button.astro';
 	});
 
 	resetBtn.addEventListener('click', () => {
-		if (confirm('¿Estás seguro de que quieres restablecer todos los cambios?')) {
+		if (confirm('Are you sure you want to reset all changes?')) {
 			reset();
 			pushToast('Application reset successfully', 'success');
 		}

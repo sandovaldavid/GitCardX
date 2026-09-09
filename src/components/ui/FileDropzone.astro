@@ -10,8 +10,8 @@ const { id, label, removable = false, removeId } = Astro.props;
 const fileNameId = `${id}FileName`;
 ---
 
-<div class="control-group">
-	<label for={id}>{label}</label>
+<div class="control-group mb-4 last:mb-0">
+	<label for={id} class="block mb-2 font-medium text-label">{label}</label>
 	<div class="file-input-group">
 		<input type="file" id={id} accept="image/*" class="file-input" />
 		<label for={id} class="file-input-label"><i class="fas fa-upload"></i> Choose File</label>
@@ -27,20 +27,6 @@ const fileNameId = `${id}FileName`;
 </div>
 
 <style>
-	.control-group {
-		margin-bottom: 15px;
-	}
-	.control-group:last-child {
-		margin-bottom: 0;
-	}
-
-	label {
-		display: block;
-		margin-bottom: 8px;
-		font-weight: 500;
-		color: #555;
-	}
-
 	.file-input-group {
 		display: flex;
 		flex-wrap: wrap;
@@ -60,17 +46,20 @@ const fileNameId = `${id}FileName`;
 	}
 
 	.file-input-label {
-		display: inline-block;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
 		padding: 8px 12px;
-		background-color: #f0f0f0;
-		color: #333;
+		min-height: 44px;
+		background-color: var(--neutral-bg);
+		color: var(--body-color);
 		border-radius: 6px;
 		cursor: pointer;
 		font-weight: 500;
 		transition: background-color 0.2s;
 	}
 	.file-input-label:hover {
-		background-color: #e0e0e0;
+		background-color: var(--neutral-bg-hover);
 	}
 
 	.file-name {
@@ -82,6 +71,7 @@ const fileNameId = `${id}FileName`;
 		background-color: var(--danger-color);
 		color: white;
 		padding: 6px 10px;
+		min-height: 44px;
 		font-size: 0.8rem;
 		border: none;
 		border-radius: 6px;

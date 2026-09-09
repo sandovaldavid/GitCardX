@@ -11,12 +11,18 @@ import CardPreview from '../components/ui/CardPreview.astro';
 <BaseLayout>
 	<header class="app-header">
 		<div class="logo-container">
-			<img src="/images/logo-github-card-generator.webp" alt="Logo" class="app-logo" />
+			<img
+				src="/images/logo-github-card-generator.webp"
+				alt="Logo"
+				class="app-logo"
+				width="50"
+				height="50"
+			/>
 			<h1>GitCardX</h1>
 		</div>
 	</header>
 
-	<div class="container">
+	<main class="container">
 		<div class="app-layout">
 			<div class="side-panel left-panel">
 				<CardEditorPanel />
@@ -36,12 +42,18 @@ import CardPreview from '../components/ui/CardPreview.astro';
 				<ImageUploadPanel />
 			</div>
 		</div>
-	</div>
+	</main>
 
 	<footer class="app-footer">
 		<div class="footer-content">
 			<div class="footer-logo animate-on-scroll">
-				<img src="/images/logo-github-card-generator.webp" alt="Logo" class="footer-logo-img" />
+				<img
+					src="/images/logo-github-card-generator.webp"
+					alt="Logo"
+					class="footer-logo-img"
+					width="40"
+					height="40"
+				/>
 				<h3>GitCardX</h3>
 			</div>
 
@@ -91,7 +103,7 @@ import CardPreview from '../components/ui/CardPreview.astro';
 				<h4>Newsletter</h4>
 				<p>Receive updates and news from this page</p>
 				<div class="newsletter-form">
-					<input type="email" placeholder="Tu email" class="newsletter-input" />
+					<input type="email" placeholder="Your email" class="newsletter-input" />
 					<button class="newsletter-button"><i class="fas fa-paper-plane"></i></button>
 				</div>
 			</div>
@@ -374,8 +386,10 @@ import CardPreview from '../components/ui/CardPreview.astro';
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		width: 42px;
-		height: 42px;
+		width: 44px;
+		height: 44px;
+		min-width: 44px;
+		min-height: 44px;
 		background-color: rgba(255, 255, 255, 0.1);
 		color: white;
 		border-radius: 50%;
@@ -455,7 +469,7 @@ import CardPreview from '../components/ui/CardPreview.astro';
 		text-align: center;
 		border-top: 1px solid rgba(255, 255, 255, 0.05);
 		font-size: 0.9rem;
-		color: #888;
+		color: #b3b3b3;
 	}
 	.footer-bottom a {
 		color: var(--border-color);
@@ -527,8 +541,8 @@ import CardPreview from '../components/ui/CardPreview.astro';
 			gap: 0.8rem;
 		}
 		.social-icon {
-			width: 38px;
-			height: 38px;
+			width: 44px;
+			height: 44px;
 		}
 		.footer-logo h3 {
 			font-size: 1.2rem;

@@ -15,6 +15,7 @@ const { id, variant = 'action', class: className } = Astro.props;
 <style>
 	.btn {
 		padding: 10px 15px;
+		min-height: 44px;
 		border: none;
 		border-radius: 6px;
 		cursor: pointer;
@@ -26,11 +27,11 @@ const { id, variant = 'action', class: className } = Astro.props;
 	}
 
 	.btn-action {
-		background-color: #f0f0f0;
-		color: #333;
+		background-color: var(--neutral-bg);
+		color: var(--body-color);
 	}
 	.btn-action:hover {
-		background-color: #e0e0e0;
+		background-color: var(--neutral-bg-hover);
 	}
 
 	.btn-primary {
@@ -56,11 +57,11 @@ const { id, variant = 'action', class: className } = Astro.props;
 	}
 
 	.btn-reset {
-		background-color: #f5f5f5;
+		background-color: var(--light-gray);
 		color: #666;
 	}
 	.btn-reset:hover {
-		background-color: #e0e0e0;
+		background-color: var(--neutral-bg-hover);
 		color: #444;
 	}
 
@@ -68,6 +69,7 @@ const { id, variant = 'action', class: className } = Astro.props;
 		background-color: var(--danger-color);
 		color: white;
 		padding: 6px 10px;
+		min-height: 44px;
 		font-size: 0.8rem;
 	}
 	.btn-small:hover {

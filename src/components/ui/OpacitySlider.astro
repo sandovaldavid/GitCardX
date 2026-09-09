@@ -4,8 +4,8 @@ import { DEFAULT_BG_OPACITY } from '../../constants/defaults';
 const initialPercent = Math.round(DEFAULT_BG_OPACITY * 100);
 ---
 
-<div class="control-group bg-opacity-group" id="bgOpacityGroup" style="display: none;">
-	<label for="bgOpacity">Background Opacity:</label>
+<div class="control-group bg-opacity-group mb-4 last:mb-0" id="bgOpacityGroup" style="display: none;">
+	<label for="bgOpacity" class="block mb-2 font-medium text-label">Background Opacity:</label>
 	<div class="slider-container">
 		<input type="range" id="bgOpacity" min="0" max="100" value={initialPercent} class="opacity-slider" />
 		<span class="opacity-value" id="bgOpacityValue">{initialPercent}%</span>
@@ -13,17 +13,6 @@ const initialPercent = Math.round(DEFAULT_BG_OPACITY * 100);
 </div>
 
 <style>
-	.control-group {
-		margin-bottom: 15px;
-	}
-
-	label {
-		display: block;
-		margin-bottom: 8px;
-		font-weight: 500;
-		color: #555;
-	}
-
 	.slider-container {
 		display: flex;
 		align-items: center;
@@ -37,12 +26,21 @@ const initialPercent = Math.round(DEFAULT_BG_OPACITY * 100);
 		background: linear-gradient(to right, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 1));
 		border-radius: 3px;
 		outline: none;
+		/* Extra vertical padding widens the track's touch/click hit area to
+		   ~44px tall without changing the visible 6px track. */
+		padding: 19px 0;
+		background-clip: content-box;
+	}
+
+	.opacity-slider:focus {
+		outline: none;
+		box-shadow: 0 0 0 3px rgba(46, 164, 79, 0.1);
 	}
 
 	.opacity-slider::-webkit-slider-thumb {
 		appearance: none;
-		width: 18px;
-		height: 18px;
+		width: 24px;
+		height: 24px;
 		border-radius: 50%;
 		background: var(--primary-color);
 		cursor: pointer;
@@ -52,8 +50,8 @@ const initialPercent = Math.round(DEFAULT_BG_OPACITY * 100);
 	}
 
 	.opacity-slider::-moz-range-thumb {
-		width: 18px;
-		height: 18px;
+		width: 24px;
+		height: 24px;
 		border-radius: 50%;
 		background: var(--primary-color);
 		cursor: pointer;

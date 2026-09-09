@@ -5,11 +5,13 @@
 	<div class="notification">
 		<div class="notification-icon"></div>
 		<div class="content"></div>
-		<button class="close-btn" type="button"><i class="fas fa-times"></i></button>
+		<button class="close-btn" type="button" aria-label="Dismiss notification">
+			<i class="fas fa-times"></i>
+		</button>
 	</div>
 </template>
 
-<div class="notification-container top-right" id="toastContainer"></div>
+<div class="notification-container top-right" id="toastContainer" aria-live="polite" role="status"></div>
 
 <style is:global>
 	.notification-container {
@@ -62,7 +64,7 @@
 		background-color: #2ecc71;
 	}
 	.notification.error {
-		background-color: #e74c3c;
+		background-color: var(--danger-color);
 	}
 	.notification.warning {
 		background-color: #f39c12;
@@ -75,12 +77,16 @@
 		position: absolute;
 		top: 5px;
 		right: 5px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		min-width: 44px;
+		min-height: 44px;
 		background: transparent;
 		border: none;
 		color: rgba(255, 255, 255, 0.6);
 		font-size: 12px;
 		cursor: pointer;
-		padding: 5px;
 		line-height: 1;
 	}
 	.notification .close-btn:hover {

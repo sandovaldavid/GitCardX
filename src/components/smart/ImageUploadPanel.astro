@@ -3,7 +3,7 @@ import FileDropzone from '../ui/FileDropzone.astro';
 import OpacitySlider from '../ui/OpacitySlider.astro';
 ---
 
-<div class="panel-section">
+<div class="panel-section mb-8 border-b border-medium-gray pb-6 last:mb-0 last:border-b-0 last:pb-0">
 	<h2><i class="fas fa-image"></i> Images</h2>
 	<FileDropzone id="projectLogo" label="Project Logo:" />
 	<FileDropzone id="bgImage" label="Background Image:" removable removeId="removeBgImage" />
@@ -112,16 +112,3 @@ import OpacitySlider from '../ui/OpacitySlider.astro';
 		bgOpacityValue.textContent = `${percent}%`;
 	});
 </script>
-
-<style>
-	.panel-section {
-		margin-bottom: 2rem;
-		border-bottom: 1px solid var(--medium-gray);
-		padding-bottom: 1.5rem;
-	}
-	.panel-section:last-child {
-		margin-bottom: 0;
-		border-bottom: none;
-		padding-bottom: 0;
-	}
-</style>

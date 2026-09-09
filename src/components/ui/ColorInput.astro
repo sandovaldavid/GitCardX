@@ -8,8 +8,8 @@ interface Props {
 const { id, label, value } = Astro.props;
 ---
 
-<div class="control-group">
-	<label for={id}>{label}</label>
+<div class="control-group mb-4 last:mb-0">
+	<label for={id} class="block mb-2 font-medium text-label">{label}</label>
 	<div class="color-input-group">
 		<input type="color" id={id} value={value} />
 		<span class="color-value" data-color-value-for={id}>{value}</span>
@@ -17,20 +17,6 @@ const { id, label, value } = Astro.props;
 </div>
 
 <style>
-	.control-group {
-		margin-bottom: 15px;
-	}
-	.control-group:last-child {
-		margin-bottom: 0;
-	}
-
-	label {
-		display: block;
-		margin-bottom: 8px;
-		font-weight: 500;
-		color: #555;
-	}
-
 	.color-input-group {
 		display: flex;
 		align-items: center;
@@ -38,8 +24,8 @@ const { id, label, value } = Astro.props;
 	}
 
 	input[type='color'] {
-		width: 40px;
-		height: 40px;
+		width: 44px;
+		height: 44px;
 		border: none;
 		border-radius: 6px;
 		cursor: pointer;
