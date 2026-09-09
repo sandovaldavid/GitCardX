@@ -1,0 +1,113 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-09T00:00:00Z",
+  "title": "Design System: GitCardX",
+  "extensions": {
+    "colorMeta": {
+      "build-accent": { "role": "primary", "displayName": "Build Teal", "canonical": "#2dd4bf" },
+      "graphite-base": { "role": "neutral", "displayName": "Graphite Base", "canonical": "#0b0d10" },
+      "surface": { "role": "neutral", "displayName": "Panel Surface", "canonical": "#161b22" },
+      "border-muted": { "role": "neutral", "displayName": "Border Muted", "canonical": "#232a33" },
+      "text-body": { "role": "neutral", "displayName": "Body Text", "canonical": "#c9d1d9" },
+      "text-label": { "role": "neutral", "displayName": "Label Text", "canonical": "#8b96a3" },
+      "status-pending": { "role": "status", "displayName": "Pending Gray", "canonical": "#94a3b0" },
+      "status-running": { "role": "status", "displayName": "Running Amber", "canonical": "#d29922" },
+      "status-passing": { "role": "status", "displayName": "Passing Green", "canonical": "#3fb950" },
+      "status-failing": { "role": "status", "displayName": "Failing Red", "canonical": "#f85149" },
+      "shadow-ink": { "role": "neutral", "displayName": "Shadow Ink", "canonical": "#000000" },
+      "overlay-white": { "role": "neutral", "displayName": "Overlay White", "canonical": "#ffffff" },
+      "footer-heading": { "role": "neutral", "displayName": "Footer Heading", "canonical": "#f5f5f5" },
+      "footer-link-muted": { "role": "neutral", "displayName": "Footer Link Muted", "canonical": "#aaaaaa" },
+      "footer-caption": { "role": "neutral", "displayName": "Footer Caption", "canonical": "#b3b3b3" },
+      "selection-ink": { "role": "neutral", "displayName": "Selection Ink", "canonical": "#f2f6f8" }
+    },
+    "typographyMeta": {
+      "label-mono": { "displayName": "Mono Label/Status", "purpose": "Stage labels, status pills, dimension/technical readouts only — never headings or prose." }
+    },
+    "shadows": [
+      { "name": "panel-ambient", "value": "0 4px 15px rgba(0,0,0,0.35)", "purpose": "Mild lift under side panels and the card-preview frame." },
+      { "name": "artifact-passing-glow", "value": "0 4px 20px color-mix(in srgb, var(--status-passing) 25%, transparent)", "purpose": "Card-preview frame glow when the derived build status is passing." }
+    ],
+    "motion": [
+      { "name": "rail-pulse", "value": "900ms ease-out, opacity + box-shadow only", "purpose": "Highlight travels along a rail node's dot when that stage's status changes." }
+    ],
+    "breakpoints": [
+      { "name": "xs", "value": "480px" },
+      { "name": "sm", "value": "600px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "992px" },
+      { "name": "xl", "value": "1200px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Stage Pill",
+      "kind": "custom",
+      "refersTo": "stage-pill-passing",
+      "description": "Shared four-state status pill (pending/running/passing/failing) used by the stage-rail, each panel's local pill, and echoed by the card-preview's BUILD ARTIFACT tag.",
+      "html": "<span class=\"ds-stage-pill ds-stage-pill--passing\">passing</span>",
+      "css": ".ds-stage-pill { display:inline-flex; align-items:center; gap:6px; font-family:'JetBrains Mono',monospace; font-size:0.75rem; font-weight:600; letter-spacing:0.02em; padding:3px 10px; border-radius:999px; line-height:1.6; white-space:nowrap; } .ds-stage-pill::before { content:''; width:8px; height:8px; border-radius:50%; background-color:currentColor; } .ds-stage-pill--passing { color:#3fb950; background-color:color-mix(in srgb, #3fb950 16%, transparent); } .ds-stage-pill--failing { color:#f85149; background-color:color-mix(in srgb, #f85149 16%, transparent); } .ds-stage-pill--running { color:#d29922; background-color:color-mix(in srgb, #d29922 16%, transparent); } .ds-stage-pill--pending { color:#94a3b0; background-color:color-mix(in srgb, #94a3b0 16%, transparent); }"
+    },
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one high-emphasis teal action button.",
+      "html": "<button class=\"ds-btn-primary\">Export</button>",
+      "css": ".ds-btn-primary { background:#2dd4bf; color:#0b0d10; padding:12px 18px; min-height:44px; border:none; border-radius:6px; font-weight:500; font-size:16px; display:inline-flex; align-items:center; gap:8px; cursor:pointer; transition:all 0.2s; } .ds-btn-primary:hover { background:#22b8a6; transform:translateY(-1px); } .ds-btn-primary:focus-visible { outline:2px solid #2dd4bf; outline-offset:2px; }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "stage-panel-input",
+      "description": "Standard text field used across the Configure/Style/Assets panels.",
+      "html": "<input type=\"text\" class=\"ds-input\" placeholder=\"Enter value\">",
+      "css": ".ds-input { width:100%; padding:10px; background:#0b0d10; color:#c9d1d9; border:1px solid #232a33; border-radius:6px; font-size:14px; transition:border-color 0.3s; } .ds-input:focus { border-color:#2dd4bf; outline:none; box-shadow:0 0 0 3px rgba(45,212,191,0.15); }"
+    },
+    {
+      "name": "Stage Panel",
+      "kind": "card",
+      "refersTo": "stage-panel",
+      "description": "The shared bordered surface for each pipeline stage panel.",
+      "html": "<div class=\"ds-stage-panel\">Panel content</div>",
+      "css": ".ds-stage-panel { background:#161b22; border:1px solid #232a33; border-radius:12px; padding:1.5rem; box-shadow:0 4px 15px rgba(0,0,0,0.35); }"
+    },
+    {
+      "name": "Stage Rail Node",
+      "kind": "custom",
+      "refersTo": "rail-node",
+      "description": "One node on the stage-rail: a pulsing status dot, a mono uppercase label, and a stage pill — three of these plus a terminus arrow form the signature pipeline widget.",
+      "html": "<div class=\"ds-rail-node\" data-status=\"passing\"><span class=\"ds-rail-dot\"></span><span class=\"ds-rail-label\">Configure</span><span class=\"ds-stage-pill ds-stage-pill--passing\">passing</span></div>",
+      "css": ".ds-rail-node { display:flex; flex-direction:column; align-items:center; gap:0.4rem; } .ds-rail-dot { width:14px; height:14px; border-radius:50%; background:#3fb950; box-shadow:0 0 0 4px color-mix(in srgb, #3fb950 18%, transparent); } .ds-rail-label { font-family:'JetBrains Mono',monospace; font-size:0.7rem; letter-spacing:0.08em; text-transform:uppercase; color:#8b96a3; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "CI Pipeline / Status Graph",
+    "overview": "GitCardX exists because GitHub ships a blank, generic social-preview card by default; this tool's own chrome earns the right to sit next to that fix by reading as technically credible rather than as a toy banner-maker. The shipped world takes that credibility literally: filling in the card's fields is framed as watching a CI run, not filling out a form. A near-black graphite base (#0b0d10 / #0d1117) reads as a terminal/dashboard surface; one teal accent (#2dd4bf) stands in for 'build/active,' used sparingly against the graphite so its rarity keeps its meaning; a four-state semantic status system (pending, running, passing, failing) drives real field validity everywhere a panel needs to say whether its own inputs are valid, not just a decorative badge scheme. JetBrains Mono is reserved for stage labels, status pills, and technical readouts (never headings or prose); Manrope carries all prose and headings.",
+    "keyCharacteristics": [
+      "Near-black graphite base with one teal accent used only for the active/build state, never as decoration",
+      "A single semantic status vocabulary (pending/running/passing/failing) reused for pills, rail nodes, and the artifact tag",
+      "JetBrains Mono strictly for stage labels, status text, and dimension/technical readouts; Manrope everywhere else",
+      "Flat, bordered surfaces on the graphite base, not shadows-as-depth",
+      "The stage-rail/stageStatusStore pairing is this build's one distinctive, product-specific pattern"
+    ],
+    "rules": [
+      { "name": "The One Accent Rule", "body": "Teal (#2dd4bf) is the only color that means 'active/build.' It never appears as a passive background fill or a decorative flourish.", "section": "colors" },
+      { "name": "The Single Status Vocabulary Rule", "body": "Any UI element that needs to say 'is this valid' reads its state from the same four status-* tokens and the same stageStatusStore.", "section": "colors" },
+      { "name": "The Mono-Means-Machine Rule", "body": "JetBrains Mono only ever labels something the pipeline metaphor treats as machine-generated output. It never sets a heading, button label, or paragraph.", "section": "typography" },
+      { "name": "The Status-Earns-Glow Rule", "body": "The only shadow that changes color in this system is the card-preview's passing-state glow; a shadow's color is never decorative.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do keep every validity indicator reading from stageStatusStore / the four status-* tokens.",
+      "Do reserve JetBrains Mono for stage labels, status text, and technical/dimension readouts only.",
+      "Do keep the @theme and :root token names in sync when a color changes.",
+      "Do treat --border-color/--bg-color/--bg-overlay-opacity as the exported card's own theme, never app chrome."
+    ],
+    "donts": [
+      "Don't use teal as a background fill or default surface color.",
+      "Don't add a second badge/status color scheme.",
+      "Don't style the exported card's inner markup (.card / #githubCard) with this design system's chrome tokens.",
+      "Don't treat Font Awesome glyph icons as an endorsed system primitive — they are an inherited, pre-redesign dependency, not part of this design system."
+    ]
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "design-system-font-size",
+        "value": "1.5rem",
+        "files": [
+          "src/components/ui/CardPreview.astro"
+        ],
+        "createdAt": "2026-09-09T17:56:25.028Z",
+        "reason": "Exported card's own inner styling (#displayRepoName) - out of design-system scope per DESIGN.md Boundary/Known Gaps"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "2.5rem",
+        "files": [
+          "src/components/ui/CardPreview.astro"
+        ],
+        "createdAt": "2026-09-09T17:56:25.054Z",
+        "reason": "Exported card's own inner styling (#displayProjectName) - out of design-system scope per DESIGN.md Boundary/Known Gaps"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "1.1rem",
+        "files": [
+          "src/components/ui/CardPreview.astro"
+        ],
+        "createdAt": "2026-09-09T17:56:25.086Z",
+        "reason": "Exported card's own inner styling (#displayRepoName @480px) - out of design-system scope per DESIGN.md Boundary/Known Gaps"
+      },
+      {
+        "rule": "design-system-radius",
+        "value": "5px",
+        "files": [
+          "src/components/ui/CardPreview.astro"
+        ],
+        "createdAt": "2026-09-09T17:56:25.115Z",
+        "reason": "Exported card's own inner styling (.project-logo) - out of design-system scope per DESIGN.md Boundary/Known Gaps"
+      }
+    ]
+  }
+}
