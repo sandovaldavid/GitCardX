@@ -228,13 +228,13 @@ import CardPreview from '../components/ui/CardPreview.astro';
 			let focusTarget: HTMLElement | null = null;
 
 			if (stage === 'configure') {
-				target = document.querySelector('.left-panel');
+				target = document.getElementById('configurePanel') || document.querySelector('.left-panel');
 				focusTarget = document.getElementById('username');
 			} else if (stage === 'style') {
-				target = document.querySelector('.right-panel');
+				target = document.getElementById('stylePanel');
 				focusTarget = document.getElementById('bgColor');
 			} else if (stage === 'assets') {
-				target = document.querySelector('.right-panel');
+				target = document.getElementById('assetsPanel');
 				focusTarget = document.getElementById('projectLogo');
 			}
 
