@@ -4,13 +4,20 @@ import { validateColor, validateDescription, validateGitHubUsername, validateRep
 import { DEFAULT_BG_OPACITY, DEFAULT_CARD, DEFAULT_COLORS } from '../constants/defaults';
 import { GITHUB_API } from '../constants/github';
 
-// Only username/repoName/projectDescription are persisted: they're
-// user-authored form data. starCount/forkCount/languages are fetched live
-// from GitHub and can go stale, so they're intentionally left out here and
-// re-fetched fresh via a "Load" click when the form is restored.
 interface PersistedState {
 	colors: ColorData;
-	card: Pick<CardData, 'username' | 'repoName' | 'projectDescription'>;
+	card: Pick<
+		CardData,
+		| 'username'
+		| 'repoName'
+		| 'projectDescription'
+		| 'showStats'
+		| 'starCount'
+		| 'forkCount'
+		| 'primaryLanguage'
+		| 'primaryLanguageColor'
+		| 'showLanguageBar'
+	>;
 	images: ImageData;
 }
 
@@ -39,6 +46,12 @@ export function save(): boolean {
 			username: card.username,
 			repoName: card.repoName,
 			projectDescription: card.projectDescription,
+			showStats: card.showStats,
+			starCount: card.starCount,
+			forkCount: card.forkCount,
+			primaryLanguage: card.primaryLanguage,
+			primaryLanguageColor: card.primaryLanguageColor,
+			showLanguageBar: card.showLanguageBar,
 		},
 		images,
 	};
@@ -73,7 +86,18 @@ export function load(): boolean {
 		}
 
 		if (parsed.card) {
-			const { username, repoName, projectDescription } = parsed.card;
+			const {
+				username,
+				repoName,
+				projectDescription,
+				showStats,
+				starCount,
+				forkCount,
+				primaryLanguage,
+				primaryLanguageColor,
+				showLanguageBar,
+			} = parsed.card;
+
 			if (username !== undefined && validateGitHubUsername(username).isValid) {
 				cardStore.setKey('username', username);
 			}
@@ -82,6 +106,24 @@ export function load(): boolean {
 			}
 			if (projectDescription !== undefined && validateDescription(projectDescription).isValid) {
 				cardStore.setKey('projectDescription', projectDescription);
+			}
+			if (showStats !== undefined) {
+				cardStore.setKey('showStats', Boolean(showStats));
+			}
+			if (starCount !== undefined) {
+				cardStore.setKey('starCount', Math.max(0, Number(starCount) || 0));
+			}
+			if (forkCount !== undefined) {
+				cardStore.setKey('forkCount', Math.max(0, Number(forkCount) || 0));
+			}
+			if (primaryLanguage !== undefined) {
+				cardStore.setKey('primaryLanguage', primaryLanguage === null ? '' : String(primaryLanguage));
+			}
+			if (primaryLanguageColor !== undefined) {
+				cardStore.setKey('primaryLanguageColor', primaryLanguageColor === null ? DEFAULT_CARD.primaryLanguageColor : String(primaryLanguageColor));
+			}
+			if (showLanguageBar !== undefined) {
+				cardStore.setKey('showLanguageBar', Boolean(showLanguageBar));
 			}
 		}
 

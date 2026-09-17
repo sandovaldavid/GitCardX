@@ -14,6 +14,7 @@ export interface GitHubRepo {
 	description: string | null;
 	stargazers_count: number;
 	forks_count: number;
+	language: string | null;
 }
 
 export interface LanguageSlice {
