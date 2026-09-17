@@ -47,6 +47,59 @@ import { DEFAULT_CARD } from '../../constants/defaults';
 			>
 		</div>
 	</div>
+
+	<div class="panel-section mb-8 border-b border-medium-gray pb-6 last:mb-0 last:border-b-0 last:pb-0">
+		<h2><i class="fas fa-chart-bar"></i> Repository Metrics</h2>
+		
+		<div class="control-group mb-4">
+			<label class="flex items-center gap-2 cursor-pointer font-medium text-label">
+				<input type="checkbox" id="showStatsToggle" class="w-4 h-4" checked={DEFAULT_CARD.showStats} />
+				Show Metrics on Card
+			</label>
+		</div>
+
+		<div class="grid grid-cols-2 gap-4 mb-4">
+			<div class="control-group">
+				<label for="starCountInput" class="block mb-2 font-medium text-label">Stars Count:</label>
+				<input type="number" id="starCountInput" min="0" value={DEFAULT_CARD.starCount} />
+			</div>
+			<div class="control-group">
+				<label for="forkCountInput" class="block mb-2 font-medium text-label">Forks Count:</label>
+				<input type="number" id="forkCountInput" min="0" value={DEFAULT_CARD.forkCount} />
+			</div>
+		</div>
+
+		<div class="control-group mb-4">
+			<label for="primaryLanguageInput" class="block mb-2 font-medium text-label">Primary Language:</label>
+			<div class="flex gap-2 items-center">
+				<input type="color" id="primaryLanguageColorInput" class="w-8 h-8 rounded cursor-pointer" value={DEFAULT_CARD.primaryLanguageColor} />
+				<input type="text" id="primaryLanguageInput" list="commonLanguagesList" placeholder="e.g. TypeScript" class="flex-grow" value={DEFAULT_CARD.primaryLanguage} />
+			</div>
+			<datalist id="commonLanguagesList">
+				<option value="TypeScript" />
+				<option value="JavaScript" />
+				<option value="Python" />
+				<option value="Rust" />
+				<option value="Go" />
+				<option value="HTML" />
+				<option value="CSS" />
+				<option value="C++" />
+				<option value="Java" />
+				<option value="Ruby" />
+				<option value="PHP" />
+				<option value="Swift" />
+				<option value="Kotlin" />
+				<option value="Dart" />
+			</datalist>
+		</div>
+
+		<div class="control-group mb-4 last:mb-0">
+			<label class="flex items-center gap-2 cursor-pointer font-medium text-label">
+				<input type="checkbox" id="showLanguageBarToggle" class="w-4 h-4" checked={DEFAULT_CARD.showLanguageBar} />
+				Show Language Composition Bar
+			</label>
+		</div>
+	</div>
 </div>
 
 <script>
@@ -54,12 +107,20 @@ import { DEFAULT_CARD } from '../../constants/defaults';
 	import type { StageStatus } from '../../stores/cardState';
 	import { getRepository, getRepositoryLanguages, getUser } from '../../lib/github';
 	import { validateGitHubUsername, validateDescription, validateRepoName } from '../../utils/validators';
+	import { getLanguageColor } from '../../constants/languageColors';
 
 	const usernameInput = document.getElementById('username') as HTMLInputElement;
 	const repoNameInput = document.getElementById('repoName') as HTMLInputElement;
 	const projectDescriptionInput = document.getElementById('projectDescription') as HTMLTextAreaElement;
 	const loadProfileBtn = document.getElementById('loadProfile') as HTMLButtonElement;
 	const configureStagePill = document.getElementById('configureStagePill') as HTMLElement | null;
+
+	const showStatsToggle = document.getElementById('showStatsToggle') as HTMLInputElement;
+	const starCountInput = document.getElementById('starCountInput') as HTMLInputElement;
+	const forkCountInput = document.getElementById('forkCountInput') as HTMLInputElement;
+	const primaryLanguageColorInput = document.getElementById('primaryLanguageColorInput') as HTMLInputElement;
+	const primaryLanguageInput = document.getElementById('primaryLanguageInput') as HTMLInputElement;
+	const showLanguageBarToggle = document.getElementById('showLanguageBarToggle') as HTMLInputElement;
 
 	// Reflect current store state into inputs (e.g. after autosave restore).
 	cardStore.subscribe((state) => {
@@ -68,6 +129,12 @@ import { DEFAULT_CARD } from '../../constants/defaults';
 		if (projectDescriptionInput.value !== state.projectDescription) {
 			projectDescriptionInput.value = state.projectDescription;
 		}
+		if (showStatsToggle.checked !== state.showStats) showStatsToggle.checked = state.showStats;
+		if (starCountInput.value !== state.starCount.toString()) starCountInput.value = state.starCount.toString();
+		if (forkCountInput.value !== state.forkCount.toString()) forkCountInput.value = state.forkCount.toString();
+		if (primaryLanguageInput.value !== state.primaryLanguage) primaryLanguageInput.value = state.primaryLanguage;
+		if (primaryLanguageColorInput.value !== state.primaryLanguageColor) primaryLanguageColorInput.value = state.primaryLanguageColor;
+		if (showLanguageBarToggle.checked !== state.showLanguageBar) showLanguageBarToggle.checked = state.showLanguageBar;
 	});
 
 	// "configure" stage validity: username is the only required field (a
@@ -121,6 +188,27 @@ import { DEFAULT_CARD } from '../../constants/defaults';
 		}
 		cardStore.setKey('username', usernameInput.value);
 		setStageStatus('configure', computeConfigureStatus());
+	});
+
+	showStatsToggle.addEventListener('change', () => {
+		cardStore.setKey('showStats', showStatsToggle.checked);
+	});
+	starCountInput.addEventListener('input', () => {
+		cardStore.setKey('starCount', Math.max(0, parseInt(starCountInput.value, 10) || 0));
+	});
+	forkCountInput.addEventListener('input', () => {
+		cardStore.setKey('forkCount', Math.max(0, parseInt(forkCountInput.value, 10) || 0));
+	});
+	primaryLanguageInput.addEventListener('input', () => {
+		const lang = primaryLanguageInput.value.trim();
+		cardStore.setKey('primaryLanguage', lang);
+		cardStore.setKey('primaryLanguageColor', getLanguageColor(lang));
+	});
+	primaryLanguageColorInput.addEventListener('input', () => {
+		cardStore.setKey('primaryLanguageColor', primaryLanguageColorInput.value);
+	});
+	showLanguageBarToggle.addEventListener('change', () => {
+		cardStore.setKey('showLanguageBar', showLanguageBarToggle.checked);
 	});
 
 	// Initial status: DOM inputs already carry their SSR/localStorage-restored
@@ -193,6 +281,25 @@ import { DEFAULT_CARD } from '../../constants/defaults';
 
 			if (languagesResult.status === 'fulfilled') {
 				cardStore.setKey('languages', languagesResult.value);
+			}
+
+			const primaryLang = (repoResult.status === 'fulfilled' ? repoResult.value.language : '') 
+				|| (languagesResult.status === 'fulfilled' ? languagesResult.value[0]?.name : '') 
+				|| '';
+			
+			if (primaryLang) {
+				const primaryLangColor = getLanguageColor(primaryLang);
+				cardStore.set({
+					...cardStore.get(),
+					primaryLanguage: primaryLang,
+					primaryLanguageColor: primaryLangColor
+				});
+			} else {
+				cardStore.set({
+					...cardStore.get(),
+					primaryLanguage: '',
+					primaryLanguageColor: '#2dd4bf'
+				});
 			}
 
 			setStageStatus('configure', computeConfigureStatus());
