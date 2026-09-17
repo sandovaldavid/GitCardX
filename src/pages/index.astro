@@ -25,19 +25,19 @@ import CardPreview from '../components/ui/CardPreview.astro';
 	<main class="container">
 		<section class="stage-rail" aria-label="Build pipeline status">
 			<ol class="stage-rail-track">
-				<li class="rail-node" data-stage="configure" data-status="pending">
+				<li class="rail-node" data-stage="configure" data-status="pending" tabindex="0" role="button">
 					<span class="rail-node-dot"></span>
 					<span class="rail-node-label">Configure</span>
 					<span class="stage-pill stage-pill--pending" data-pill="configure">pending</span>
 				</li>
 				<li class="rail-connector" aria-hidden="true"></li>
-				<li class="rail-node" data-stage="style" data-status="pending">
+				<li class="rail-node" data-stage="style" data-status="pending" tabindex="0" role="button">
 					<span class="rail-node-dot"></span>
 					<span class="rail-node-label">Style</span>
 					<span class="stage-pill stage-pill--pending" data-pill="style">pending</span>
 				</li>
 				<li class="rail-connector" aria-hidden="true"></li>
-				<li class="rail-node" data-stage="assets" data-status="pending">
+				<li class="rail-node" data-stage="assets" data-status="pending" tabindex="0" role="button">
 					<span class="rail-node-dot"></span>
 					<span class="rail-node-label">Assets</span>
 					<span class="stage-pill stage-pill--pending" data-pill="assets">pending</span>
@@ -219,6 +219,45 @@ import CardPreview from '../components/ui/CardPreview.astro';
 
 		if (railTerminus) railTerminus.setAttribute('data-status', deriveBuildStatus(state));
 	});
+
+	// Stage-rail interactivity
+	document.querySelectorAll('.rail-node[data-stage]').forEach(node => {
+		const handleActivation = () => {
+			const stage = (node as HTMLElement).dataset.stage;
+			let target: HTMLElement | null = null;
+			let focusTarget: HTMLElement | null = null;
+
+			if (stage === 'configure') {
+				target = document.querySelector('.left-panel');
+				focusTarget = document.getElementById('username');
+			} else if (stage === 'style') {
+				target = document.querySelector('.right-panel');
+				focusTarget = document.getElementById('bgColor');
+			} else if (stage === 'assets') {
+				target = document.querySelector('.right-panel');
+				focusTarget = document.getElementById('projectLogo');
+			}
+
+			if (target) {
+				target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+				target.classList.remove('panel-focus-pulse');
+				void target.offsetWidth; // trigger reflow
+				target.classList.add('panel-focus-pulse');
+			}
+			
+			if (focusTarget) {
+				setTimeout(() => focusTarget.focus({ preventScroll: true }), 100);
+			}
+		};
+
+		node.addEventListener('click', handleActivation);
+		node.addEventListener('keydown', (e) => {
+			if ((e as KeyboardEvent).key === 'Enter' || (e as KeyboardEvent).key === ' ') {
+				e.preventDefault();
+				handleActivation();
+			}
+		});
+	});
 </script>
 
 <style>
@@ -305,6 +344,15 @@ import CardPreview from '../components/ui/CardPreview.astro';
 		gap: 0.4rem;
 		flex: 1 1 0;
 		min-width: 0;
+		cursor: pointer;
+		outline: none;
+		border-radius: 8px;
+		padding: 0.25rem;
+		transition: background-color 0.2s ease;
+	}
+
+	.rail-node:hover, .rail-node:focus-visible {
+		background-color: color-mix(in srgb, var(--primary-color) 10%, transparent);
 	}
 
 	.rail-node-dot {
@@ -422,6 +470,15 @@ import CardPreview from '../components/ui/CardPreview.astro';
 		display: flex;
 		flex-direction: column;
 		gap: 1rem;
+	}
+
+	:global(.panel-focus-pulse) {
+		animation: panelPulse 1s ease-out;
+	}
+	@keyframes panelPulse {
+		0% { box-shadow: 0 0 0 0px var(--primary-color); border-color: var(--primary-color); }
+		50% { box-shadow: 0 0 0 8px color-mix(in srgb, var(--primary-color) 0%, transparent); border-color: var(--primary-color); }
+		100% { box-shadow: 0 4px 15px rgba(0, 0, 0, 0.35); }
 	}
 
 	.preview-header {

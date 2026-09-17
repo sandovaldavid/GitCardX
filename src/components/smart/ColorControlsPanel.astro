@@ -8,6 +8,52 @@ import { DEFAULT_COLORS } from '../../constants/defaults';
 		<i class="fas fa-palette"></i> Style Customization
 		<span class="stage-pill stage-pill--pending" id="styleStagePill">Style — pending</span>
 	</h2>
+
+	<div class="theme-presets">
+		<h3 class="presets-title">Quick Presets</h3>
+		<div class="presets-grid">
+			<button class="preset-chip" type="button" data-bg="#0d1117" data-border="#30363d" data-project="#ffffff">
+				<span class="preset-swatches">
+					<span class="swatch" style="background: #0d1117"></span>
+					<span class="swatch" style="background: #30363d"></span>
+					<span class="swatch" style="background: #ffffff"></span>
+				</span>
+				GitHub Dark
+			</button>
+			<button class="preset-chip" type="button" data-bg="#0b0d10" data-border="#2dd4bf" data-project="#ffffff">
+				<span class="preset-swatches">
+					<span class="swatch" style="background: #0b0d10"></span>
+					<span class="swatch" style="background: #2dd4bf"></span>
+					<span class="swatch" style="background: #ffffff"></span>
+				</span>
+				Terminal Teal
+			</button>
+			<button class="preset-chip" type="button" data-bg="#0a0f1d" data-border="#38bdf8" data-project="#f8fafc">
+				<span class="preset-swatches">
+					<span class="swatch" style="background: #0a0f1d"></span>
+					<span class="swatch" style="background: #38bdf8"></span>
+					<span class="swatch" style="background: #f8fafc"></span>
+				</span>
+				Midnight Navy
+			</button>
+			<button class="preset-chip" type="button" data-bg="#1e1f29" data-border="#a6e22e" data-project="#f8f8f2">
+				<span class="preset-swatches">
+					<span class="swatch" style="background: #1e1f29"></span>
+					<span class="swatch" style="background: #a6e22e"></span>
+					<span class="swatch" style="background: #f8f8f2"></span>
+				</span>
+				Monokai Cyber
+			</button>
+			<button class="preset-chip" type="button" data-bg="#ffffff" data-border="#0969da" data-project="#1f2328">
+				<span class="preset-swatches">
+					<span class="swatch border-swatch" style="background: #ffffff"></span>
+					<span class="swatch" style="background: #0969da"></span>
+					<span class="swatch" style="background: #1f2328"></span>
+				</span>
+				Clean Light
+			</button>
+		</div>
+	</div>
 	<ColorInput
 		id="bgColor"
 		label="Background Color:"
@@ -92,6 +138,19 @@ import { DEFAULT_COLORS } from '../../constants/defaults';
 
 	// Initial status from the SSR-rendered default swatch values.
 	setStageStatus('style', computeStyleStatus());
+
+	const presetChips = document.querySelectorAll<HTMLButtonElement>('.preset-chip');
+	presetChips.forEach(chip => {
+		chip.addEventListener('click', () => {
+			const bg = chip.dataset.bg;
+			const border = chip.dataset.border;
+			const project = chip.dataset.project;
+			if (bg && border && project) {
+				colorStore.set({ bgColor: bg, borderColor: border, projectColor: project });
+				setStageStatus('style', computeStyleStatus());
+			}
+		});
+	});
 </script>
 
 <style>
@@ -105,5 +164,53 @@ import { DEFAULT_COLORS } from '../../constants/defaults';
 	.stage-panel h2 {
 		flex-wrap: wrap;
 		row-gap: 8px;
+	}
+
+	.theme-presets {
+		margin: 1.5rem 0;
+	}
+	.presets-title {
+		font-size: 0.85rem;
+		font-weight: 600;
+		color: var(--label-color);
+		margin-bottom: 0.75rem;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+	}
+	.presets-grid {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+	}
+	.preset-chip {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.4rem 0.75rem;
+		background: var(--neutral-bg);
+		border: 1px solid var(--medium-gray);
+		border-radius: 20px;
+		font-size: 0.8rem;
+		color: var(--body-color);
+		cursor: pointer;
+		transition: all 0.2s ease;
+	}
+	.preset-chip:hover, .preset-chip:focus {
+		border-color: var(--primary-color);
+		background: color-mix(in srgb, var(--primary-color) 10%, transparent);
+		outline: none;
+	}
+	.preset-swatches {
+		display: flex;
+		gap: 2px;
+	}
+	.swatch {
+		width: 12px;
+		height: 12px;
+		border-radius: 50%;
+		border: 1px solid rgba(255, 255, 255, 0.1);
+	}
+	.border-swatch {
+		border-color: var(--medium-gray);
 	}
 </style>
