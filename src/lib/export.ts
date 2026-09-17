@@ -161,6 +161,7 @@ function scaleCardElements(card: HTMLElement): void {
 		description: { selector: '#displayDescription', ...EXPORT_TEXT_SIZES.description },
 		starCount: { selector: '#displayStarCount', ...EXPORT_TEXT_SIZES.statCount },
 		forkCount: { selector: '#displayForkCount', ...EXPORT_TEXT_SIZES.statCount },
+		language: { selector: '#displayLanguage', ...EXPORT_TEXT_SIZES.statCount },
 	};
 
 	for (const config of Object.values(textElements)) {
@@ -179,10 +180,17 @@ function scaleCardElements(card: HTMLElement): void {
 		profilePic.style.height = `${ASSET_SIZES.profilePic.export}px`;
 	}
 
-	const statIcons = card.querySelectorAll<HTMLElement>('.stat-chip i');
+	const statIcons = card.querySelectorAll<HTMLElement>('.stat-chip svg');
 	statIcons.forEach((icon) => {
-		icon.style.fontSize = `${ASSET_SIZES.statIcon.export}px`;
+		icon.style.width = `${ASSET_SIZES.statIcon.export}px`;
+		icon.style.height = `${ASSET_SIZES.statIcon.export}px`;
 	});
+
+	const langDot = card.querySelector<HTMLElement>('.lang-dot');
+	if (langDot) {
+		langDot.style.width = `${ASSET_SIZES.langDot.export}px`;
+		langDot.style.height = `${ASSET_SIZES.langDot.export}px`;
+	}
 
 	const languageBar = card.querySelector<HTMLElement>('.language-bar');
 	if (languageBar) {

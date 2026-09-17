@@ -27,12 +27,16 @@ import { GITHUB_API } from '../../constants/github';
 		<div class="card-footer">
 			<div id="statsRow" class="stats-row" style="display: none;">
 				<span class="stat-chip">
-					<i class="fas fa-star"></i>
+					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16" fill="currentColor"><path d="M8 .25a.75.75 0 0 1 .673.418l1.882 3.815 4.21.612a.75.75 0 0 1 .416 1.279l-3.046 2.97.719 4.192a.75.75 0 0 1-1.088.791L8 12.347l-3.766 1.98a.75.75 0 0 1-1.088-.79l.72-4.194L.818 6.374a.75.75 0 0 1 .416-1.28l4.21-.611L7.327.668A.75.75 0 0 1 8 .25Z"></path></svg>
 					<span id="displayStarCount" class="stat-count">0</span>
 				</span>
 				<span class="stat-chip">
-					<i class="fas fa-code-branch"></i>
+					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16" fill="currentColor"><path d="M5 3.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm0 2.122a2.25 2.25 0 1 0-1.5 0v.878A2.25 2.25 0 0 0 5.75 8.5h4.5A2.25 2.25 0 0 0 12.5 6.25v-.878a2.25 2.25 0 1 0-1.5 0v.878a.75.75 0 0 1-.75.75h-4.5A.75.75 0 0 1 5 6.25v-.878ZM10.5 3.25a.75.75 0 1 1 1.5 0 .75.75 0 0 1-1.5 0ZM5 12.75a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm0 2.122a2.25 2.25 0 1 0-1.5 0V9.25a.75.75 0 0 1 1.5 0v5.622Z"></path></svg>
 					<span id="displayForkCount" class="stat-count">0</span>
+				</span>
+				<span id="langChip" class="stat-chip" style="display: none;">
+					<span id="langDot" class="lang-dot"></span>
+					<span id="displayLanguage" class="stat-text"></span>
 				</span>
 			</div>
 			<div id="logoContainer" class="logo-container"></div>
@@ -45,6 +49,7 @@ import { GITHUB_API } from '../../constants/github';
 	import { cardStore, colorStore, imageStore, stageStatusStore } from '../../stores/cardState';
 	import type { StageStatus } from '../../stores/cardState';
 	import { setCSSVariables } from '../../utils/dom';
+	import { formatCompactNumber } from '../../utils/formatters';
 
 	const displayUsername = document.getElementById('displayUsername');
 	const profilePic = document.getElementById('profilePic') as HTMLImageElement | null;
@@ -53,6 +58,9 @@ import { GITHUB_API } from '../../constants/github';
 	const statsRow = document.getElementById('statsRow') as HTMLElement | null;
 	const displayStarCount = document.getElementById('displayStarCount');
 	const displayForkCount = document.getElementById('displayForkCount');
+	const langChip = document.getElementById('langChip');
+	const langDot = document.getElementById('langDot');
+	const displayLanguage = document.getElementById('displayLanguage');
 	const languageBar = document.getElementById('languageBar') as HTMLElement | null;
 	const logoContainer = document.getElementById('logoContainer');
 	const card = document.getElementById('githubCard');
@@ -76,13 +84,23 @@ import { GITHUB_API } from '../../constants/github';
 		const repoLoaded = state.profileLoaded && Boolean(state.repoName);
 
 		if (statsRow) {
-			statsRow.style.display = repoLoaded ? 'flex' : 'none';
+			statsRow.style.display = repoLoaded && state.showStats ? 'flex' : 'none';
 		}
-		if (displayStarCount) displayStarCount.textContent = String(state.starCount);
-		if (displayForkCount) displayForkCount.textContent = String(state.forkCount);
+		if (displayStarCount) displayStarCount.textContent = formatCompactNumber(state.starCount);
+		if (displayForkCount) displayForkCount.textContent = formatCompactNumber(state.forkCount);
+
+		if (langChip && langDot && displayLanguage) {
+			if (state.primaryLanguage) {
+				langChip.style.display = 'inline-flex';
+				displayLanguage.textContent = state.primaryLanguage;
+				langDot.style.backgroundColor = state.primaryLanguageColor || '#2dd4bf';
+			} else {
+				langChip.style.display = 'none';
+			}
+		}
 
 		if (languageBar) {
-			if (repoLoaded && state.languages.length > 0) {
+			if (repoLoaded && state.showLanguageBar && state.languages.length > 0) {
 				languageBar.style.display = 'flex';
 				languageBar.replaceChildren(
 					...state.languages.map((slice) => {
@@ -340,8 +358,16 @@ import { GITHUB_API } from '../../constants/github';
 		font-size: 1rem;
 	}
 
-	.stat-chip i {
-		font-size: 0.9rem;
+	.stat-chip svg {
+		fill: currentColor;
+	}
+
+	.lang-dot {
+		width: 12px;
+		height: 12px;
+		border-radius: 50%;
+		display: inline-block;
+		margin-right: 4px;
 	}
 
 	.stat-count {

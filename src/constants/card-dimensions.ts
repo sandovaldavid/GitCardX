@@ -16,6 +16,7 @@ export const CARD_EXPORT = {
 export const ASSET_SIZES = {
 	profilePic: { preview: 40, export: 80 },
 	statIcon: { preview: 14, export: 28 },
+	langDot: { preview: 12, export: 24 },
 	languageBar: { preview: 6, export: 12 },
 } as const;
 
