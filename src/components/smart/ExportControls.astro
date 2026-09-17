@@ -4,6 +4,7 @@ import Button from '../ui/Button.astro';
 
 <div class="preview-actions">
 	<Button id="generateCard" variant="primary"><i class="fas fa-sync-alt"></i> Update</Button>
+	<Button id="copyBtn" variant="primary"><i class="fas fa-copy"></i> Copy Image</Button>
 	<Button id="downloadCard" variant="primary"><i class="fas fa-download"></i> Download</Button>
 </div>
 
@@ -13,10 +14,11 @@ import Button from '../ui/Button.astro';
 
 <script>
 	import { pushToast } from '../../stores/cardState';
-	import { exportToPNG } from '../../lib/export';
+	import { exportToPNG, copyCardToClipboard } from '../../lib/export';
 	import { reset, save } from '../../lib/storage';
 
 	const generateBtn = document.getElementById('generateCard') as HTMLButtonElement;
+	const copyBtn = document.getElementById('copyBtn') as HTMLButtonElement;
 	const downloadBtn = document.getElementById('downloadCard') as HTMLButtonElement;
 	const resetBtn = document.getElementById('resetForm') as HTMLButtonElement;
 
@@ -25,6 +27,23 @@ import Button from '../ui/Button.astro';
 	generateBtn.addEventListener('click', () => {
 		save();
 		pushToast('Card updated successfully', 'success');
+	});
+
+	copyBtn.addEventListener('click', async () => {
+		const originalLabel = copyBtn.innerHTML;
+		copyBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Copying...';
+		copyBtn.disabled = true;
+
+		try {
+			await copyCardToClipboard('githubCard');
+			pushToast('Card image copied to clipboard!', 'success');
+		} catch (error) {
+			pushToast(error instanceof Error ? error.message : String(error), 'error');
+			console.error(error);
+		} finally {
+			copyBtn.innerHTML = originalLabel;
+			copyBtn.disabled = false;
+		}
 	});
 
 	downloadBtn.addEventListener('click', async () => {

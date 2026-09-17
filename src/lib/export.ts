@@ -52,6 +52,55 @@ export async function exportToPNG(cardId: string): Promise<void> {
 	}
 }
 
+export async function copyCardToClipboard(cardId: string): Promise<void> {
+	const card = document.getElementById(cardId);
+	if (!card) {
+		throw new Error('Card element not found');
+	}
+
+	const wrapper = createExportWrapper();
+	const clone = prepareCardForExport(card);
+	wrapper.appendChild(clone);
+	document.body.appendChild(wrapper);
+
+	try {
+		await new Promise((resolve) => setTimeout(resolve, ANIMATION_DELAY_MS));
+
+		const canvas = await html2canvas(wrapper, {
+			scale: 1,
+			backgroundColor: null,
+			logging: false,
+			useCORS: true,
+			allowTaint: true,
+			width: CARD_EXPORT.WIDTH,
+			height: CARD_EXPORT.HEIGHT,
+			onclone: (clonedDoc: Document) => {
+				const clonedWrapper = clonedDoc.querySelector<HTMLElement>('[style*="fixed"]');
+				if (clonedWrapper) {
+					const borderColor = getComputedStyle(document.documentElement)
+						.getPropertyValue('--border-color')
+						.trim();
+					clonedWrapper.style.borderBottom = `3rem solid ${borderColor}`;
+				}
+			},
+		});
+
+		const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
+		if (!blob) throw new Error('Failed to generate image blob');
+		if (!navigator.clipboard || !navigator.clipboard.write) {
+			throw new Error('Clipboard API not supported in this browser environment');
+		}
+		await navigator.clipboard.write([
+			new ClipboardItem({ 'image/png': blob })
+		]);
+	} finally {
+		if (wrapper.parentNode) {
+			document.body.removeChild(wrapper);
+		}
+		removeTemporaryStyles();
+	}
+}
+
 function createExportWrapper(): HTMLDivElement {
 	const wrapper = document.createElement('div');
 
