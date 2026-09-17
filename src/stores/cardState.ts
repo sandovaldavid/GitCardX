@@ -9,8 +9,12 @@ export interface CardData {
 	projectDescription: string;
 	avatarUrl: string;
 	profileLoaded: boolean;
+	showStats: boolean;
 	starCount: number;
 	forkCount: number;
+	primaryLanguage: string;
+	primaryLanguageColor: string;
+	showLanguageBar: boolean;
 	languages: LanguageSlice[];
 }
 

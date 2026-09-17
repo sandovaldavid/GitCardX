@@ -13,8 +13,12 @@ export const DEFAULT_CARD = {
 	username: '',
 	repoName: '',
 	projectDescription: '',
+	showStats: true,
 	starCount: 0,
 	forkCount: 0,
+	primaryLanguage: '',
+	primaryLanguageColor: '#2dd4bf',
+	showLanguageBar: true,
 	languages: [] as LanguageSlice[],
 };
 
