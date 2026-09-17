@@ -2,8 +2,13 @@
 import { GITHUB_API } from '../../constants/github';
 ---
 
-<div id="cardContainer">
-	<div id="githubCard" class="card">
+<div class="card-preview-frame">
+	<div class="card-preview-meta">
+		<span id="artifactTag" class="artifact-tag" data-build-status="pending">BUILD ARTIFACT</span>
+		<span class="dimension-tag">1280 × 640 px</span>
+	</div>
+	<div id="cardContainer">
+		<div id="githubCard" class="card">
 		<div class="card-header">
 			<div class="title-info">
 				<h1 id="displayTitle" class="repo-title">
@@ -17,8 +22,9 @@ import { GITHUB_API } from '../../constants/github';
 				src={GITHUB_API.DEFAULT_AVATAR}
 				alt="Profile Picture"
 				class="profile-pic"
-				width="40"
-				height="40"
+				width="96"
+				height="96"
+				crossorigin="anonymous"
 			/>
 		</div>
 		<div class="card-body">
@@ -27,11 +33,11 @@ import { GITHUB_API } from '../../constants/github';
 		<div class="card-footer">
 			<div id="statsRow" class="stats-row" style="display: none;">
 				<span class="stat-chip">
-					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16" fill="currentColor"><path d="M8 .25a.75.75 0 0 1 .673.418l1.882 3.815 4.21.612a.75.75 0 0 1 .416 1.279l-3.046 2.97.719 4.192a.75.75 0 0 1-1.088.791L8 12.347l-3.766 1.98a.75.75 0 0 1-1.088-.79l.72-4.194L.818 6.374a.75.75 0 0 1 .416-1.28l4.21-.611L7.327.668A.75.75 0 0 1 8 .25Z"></path></svg>
+					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="24" height="24" fill="currentColor" aria-hidden="true"><path d="M8 .25a.75.75 0 0 1 .673.418l1.882 3.815 4.21.612a.75.75 0 0 1 .416 1.279l-3.046 2.97.719 4.192a.75.75 0 0 1-1.088.791L8 12.347l-3.766 1.98a.75.75 0 0 1-1.088-.79l.72-4.194L.818 6.374a.75.75 0 0 1 .416-1.28l4.21-.611L7.327.668A.75.75 0 0 1 8 .25Z"></path></svg>
 					<span id="displayStarCount" class="stat-count">0</span>
 				</span>
 				<span class="stat-chip">
-					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16" fill="currentColor"><path d="M5 3.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm0 2.122a2.25 2.25 0 1 0-1.5 0v.878A2.25 2.25 0 0 0 5.75 8.5h4.5A2.25 2.25 0 0 0 12.5 6.25v-.878a2.25 2.25 0 1 0-1.5 0v.878a.75.75 0 0 1-.75.75h-4.5A.75.75 0 0 1 5 6.25v-.878ZM10.5 3.25a.75.75 0 1 1 1.5 0 .75.75 0 0 1-1.5 0ZM5 12.75a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm0 2.122a2.25 2.25 0 1 0-1.5 0V9.25a.75.75 0 0 1 1.5 0v5.622Z"></path></svg>
+					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="24" height="24" fill="currentColor" aria-hidden="true"><path d="M5 5.372v.878c0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75v-.878a2.25 2.25 0 1 1 1.5 0v.878a2.25 2.25 0 0 1-2.25 2.25h-1.5v2.128a2.251 2.251 0 1 1-1.5 0V8.5h-1.5A2.25 2.25 0 0 1 3 6.25v-.878a2.25 2.25 0 1 1 1.5 0ZM5 3.25a.75.75 0 1 0-1.5 0 .75.75 0 0 0 1.5 0Zm6.75.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Zm-3 8.75a.75.75 0 1 0-1.5 0 .75.75 0 0 0 1.5 0Z"></path></svg>
 					<span id="displayForkCount" class="stat-count">0</span>
 				</span>
 				<span id="langChip" class="stat-chip" style="display: none;">
@@ -43,6 +49,7 @@ import { GITHUB_API } from '../../constants/github';
 		</div>
 		<div id="languageBar" class="language-bar" style="display: none;"></div>
 	</div>
+</div>
 </div>
 
 <script>
@@ -66,15 +73,26 @@ import { GITHUB_API } from '../../constants/github';
 	const card = document.getElementById('githubCard');
 	const cardContainer = document.getElementById('cardContainer') as HTMLElement | null;
 
+	// Scale the 1280x640 canonical card to fit the responsive preview container
+	function updateScale() {
+		if (!cardContainer || !card) return;
+		const containerWidth = cardContainer.clientWidth;
+		const scale = containerWidth / 1280;
+		card.style.transform = `scale(${scale})`;
+	}
+
+	if (cardContainer) {
+		const ro = new ResizeObserver(() => updateScale());
+		ro.observe(cardContainer);
+		updateScale();
+	}
+
 	cardStore.subscribe((state) => {
 		if (displayUsername) displayUsername.textContent = state.username || 'username';
 		if (profilePic) profilePic.src = state.avatarUrl;
 		if (displayRepoName) displayRepoName.textContent = state.repoName || 'repository-name';
 		if (displayDescription) {
 			displayDescription.textContent = state.projectDescription || '';
-			// '' (not 'block') so the stylesheet's `display: -webkit-box` (the
-			// line-clamp trigger) takes over when visible — an inline 'block'
-			// would silently disable the clamp.
 			displayDescription.style.display = state.projectDescription ? '' : 'none';
 		}
 
@@ -127,7 +145,7 @@ import { GITHUB_API } from '../../constants/github';
 		// heading it used to color no longer exists.
 		if (displayTitle) (displayTitle as HTMLElement).style.color = state.projectColor;
 		setCSSVariables({ '--border-color': state.borderColor, '--bg-color': state.bgColor });
-		if (cardContainer) cardContainer.style.borderBottomColor = state.borderColor;
+		if (card) (card as HTMLElement).style.borderBottomColor = state.borderColor;
 	});
 
 	imageStore.subscribe((state) => {
@@ -138,7 +156,6 @@ import { GITHUB_API } from '../../constants/github';
 				img.src = state.logoDataUrl;
 				img.alt = 'Project Logo';
 				img.className = 'project-logo';
-				img.height = 48;
 				logoContainer.appendChild(img);
 			}
 		}
@@ -174,11 +191,64 @@ import { GITHUB_API } from '../../constants/github';
 	}
 
 	stageStatusStore.subscribe((state) => {
-		if (cardContainer) cardContainer.dataset.buildStatus = deriveBuildStatus(state);
+		const status = deriveBuildStatus(state);
+		if (cardContainer) cardContainer.dataset.buildStatus = status;
+		const artifactTag = document.getElementById('artifactTag');
+		if (artifactTag) artifactTag.dataset.buildStatus = status;
 	});
 </script>
 
 <style>
+	.card-preview-frame {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+		width: 100%;
+	}
+
+	.card-preview-meta {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		padding: 0 4px;
+	}
+
+	.artifact-tag {
+		font-family: var(--mono-font);
+		font-size: 11px;
+		font-weight: 600;
+		letter-spacing: 0.04em;
+		color: var(--label-color);
+		background-color: color-mix(in srgb, var(--light-gray) 75%, transparent);
+		padding: 3px 8px;
+		border-radius: 4px;
+		transition: color 0.25s ease, background-color 0.25s ease;
+	}
+
+	.artifact-tag[data-build-status='passing'] {
+		color: var(--status-passing);
+		background-color: color-mix(in srgb, var(--status-passing) 15%, transparent);
+	}
+
+	.artifact-tag[data-build-status='failing'] {
+		color: var(--status-failing);
+		background-color: color-mix(in srgb, var(--status-failing) 15%, transparent);
+	}
+
+	.artifact-tag[data-build-status='running'] {
+		color: var(--status-running);
+		background-color: color-mix(in srgb, var(--status-running) 15%, transparent);
+	}
+
+	.dimension-tag {
+		font-family: var(--mono-font);
+		font-size: 12px;
+		color: var(--label-color);
+		background-color: color-mix(in srgb, var(--light-gray) 75%, transparent);
+		padding: 2px 6px;
+		border-radius: 4px;
+	}
+
 	#cardContainer {
 		position: relative;
 		background-color: var(--neutral-bg);
@@ -188,7 +258,6 @@ import { GITHUB_API } from '../../constants/github';
 		overflow: hidden;
 		aspect-ratio: 2 / 1;
 		width: 100%;
-		border-bottom: 2rem solid var(--border-color);
 		transition: box-shadow 0.3s ease;
 	}
 
@@ -198,54 +267,18 @@ import { GITHUB_API } from '../../constants/github';
 		box-shadow: 0 4px 20px color-mix(in srgb, var(--status-passing) 25%, transparent);
 	}
 
-	#cardContainer::before {
-		content: 'BUILD ARTIFACT';
-		position: absolute;
-		top: 10px;
-		left: 10px;
-		font-family: var(--mono-font);
-		font-size: 11px;
-		font-weight: 600;
-		letter-spacing: 0.04em;
-		color: var(--label-color);
-		background-color: color-mix(in srgb, var(--light-gray) 75%, transparent);
-		padding: 3px 8px;
-		border-radius: 4px;
-		pointer-events: none;
-		z-index: 10;
-		transition: color 0.25s ease;
-	}
-
-	#cardContainer[data-build-status='passing']::before {
-		color: var(--status-passing);
-	}
-	#cardContainer[data-build-status='failing']::before {
-		color: var(--status-failing);
-	}
-
-	#cardContainer::after {
-		content: '1280 × 640 px';
-		position: absolute;
-		bottom: 10px;
-		right: 10px;
-		font-family: var(--mono-font);
-		font-size: 12px;
-		color: var(--label-color);
-		background-color: color-mix(in srgb, var(--light-gray) 75%, transparent);
-		padding: 2px 6px;
-		border-radius: 4px;
-		pointer-events: none;
-		z-index: 10;
-	}
-
+	/* Canonical 1280x640 card, scaled down via transform: scale() to fit #cardContainer */
 	.card {
 		position: absolute;
 		top: 0;
 		left: 0;
-		width: 100%;
-		height: 100%;
-		padding: 25px;
+		width: 1280px;
+		height: 640px;
+		box-sizing: border-box;
+		transform-origin: top left;
+		padding: 48px 64px 0 64px;
 		background-color: var(--bg-color);
+		border-bottom: 28px solid var(--border-color);
 		overflow: hidden;
 		color: white;
 		display: flex;
@@ -277,14 +310,12 @@ import { GITHUB_API } from '../../constants/github';
 	}
 
 	.card-header {
-		padding: 20px;
 		display: flex;
 		justify-content: space-between;
-		align-items: flex-start;
-		height: 80px;
-		min-height: 80px;
+		align-items: center;
+		min-height: 100px;
+		gap: 24px;
 		font-family: var(--primary-font);
-		gap: 12px;
 	}
 
 	.title-info {
@@ -292,15 +323,20 @@ import { GITHUB_API } from '../../constants/github';
 		align-items: center;
 		min-width: 0;
 		flex: 1 1 auto;
+		overflow: hidden;
 	}
 
 	.repo-title {
 		max-width: 100%;
+		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
-		white-space: nowrap;
-		font-size: 1.6rem;
+		font-size: 48px;
+		line-height: 1.4;
 		margin: 0;
+		padding: 10px 0;
+		display: flex;
+		align-items: baseline;
 	}
 
 	#displayUsername {
@@ -310,8 +346,8 @@ import { GITHUB_API } from '../../constants/github';
 
 	.title-separator {
 		font-weight: 300;
-		opacity: 0.6;
-		margin: 0 2px;
+		opacity: 0.5;
+		margin: 0 14px;
 	}
 
 	#displayRepoName {
@@ -320,25 +356,28 @@ import { GITHUB_API } from '../../constants/github';
 
 	.profile-pic {
 		flex-shrink: 0;
-		width: 40px;
-		height: 40px;
+		width: 96px;
+		height: 96px;
 		border-radius: 50%;
+		object-fit: cover;
+		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
 	}
 
 	.card-body {
 		flex-grow: 1;
-		padding: 20px;
 		display: flex;
-		align-items: center;
-		overflow: hidden;
-		min-height: 100px;
+		align-items: flex-start;
+		justify-content: center;
+		flex-direction: column;
+		padding: 16px 0;
+		min-height: 140px;
 	}
 
 	.card-footer {
 		position: relative;
-		height: auto;
+		height: 80px;
 		min-height: 80px;
-		padding: 0 20px 20px;
+		padding: 0 0 16px 0;
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
@@ -347,77 +386,72 @@ import { GITHUB_API } from '../../constants/github';
 
 	.stats-row {
 		display: flex;
-		gap: 16px;
+		align-items: center;
+		gap: 32px;
 	}
 
 	.stat-chip {
 		display: inline-flex;
 		align-items: center;
-		gap: 6px;
-		color: var(--label-color);
-		font-size: 1rem;
+		gap: 10px;
+		color: #8b949e;
 	}
 
 	.stat-chip svg {
-		fill: currentColor;
+		width: 24px;
+		height: 24px;
+		fill: #8b949e;
+		flex-shrink: 0;
 	}
 
 	.lang-dot {
-		width: 12px;
-		height: 12px;
+		width: 18px;
+		height: 18px;
 		border-radius: 50%;
 		display: inline-block;
-		margin-right: 4px;
+		flex-shrink: 0;
 	}
 
-	.stat-count {
+	.stat-count,
+	.stat-text {
 		font-family: var(--mono-font);
+		font-size: 24px;
 		font-weight: 600;
+		color: #c9d1d9;
 	}
 
 	.project-description {
-		font-size: 1.2rem;
-		line-height: 1.5;
+		font-size: 28px;
+		line-height: 1.6;
 		color: #c9d1d9;
 		width: 100%;
-		max-width: 80%;
-		margin: 0 auto;
-		text-align: justify;
+		max-width: 950px;
+		margin: 0;
+		text-align: left;
 		opacity: 0.9;
 		font-family: var(--primary-font);
-		display: -webkit-box;
-		-webkit-box-orient: vertical;
-		-webkit-line-clamp: 3;
-		line-clamp: 3;
-		overflow: hidden;
-		text-overflow: ellipsis;
+		word-break: break-word;
 	}
 
 	.project-logo {
 		width: auto;
-		height: 3rem;
-		object-fit: cover;
-		border-radius: 5px;
+		height: 60px;
+		object-fit: contain;
+		border-radius: 8px;
 	}
 
 	.card-footer .logo-container {
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		max-height: 4rem;
+		max-height: 70px;
 	}
 
-	/* .card has 25px padding on every side; extend the bar past it with
-	   negative margins so it reaches the card's true left/right/bottom
-	   edges (matching GitHub's own edge-to-edge language bar) instead of
-	   sitting inset like a regular padded child. #cardContainer's own
-	   border-radius + overflow:hidden (which .card exactly fills) already
-	   clips the bottom corners, so no radius is needed here. */
 	.language-bar {
 		display: flex;
-		width: calc(100% + 50px);
-		margin: 0 -25px -25px;
-		height: 6px;
+		width: 1280px;
+		margin: 0 -64px;
+		height: 10px;
 		overflow: hidden;
 		flex-shrink: 0;
 	}
@@ -426,29 +460,5 @@ import { GITHUB_API } from '../../constants/github';
 		flex-grow: 0;
 		flex-shrink: 0;
 		height: 100%;
-	}
-
-	@media (max-width: 480px) {
-		.card-header {
-			padding: 15px;
-			height: 60px;
-		}
-
-		.repo-title {
-			font-size: 1.1rem;
-		}
-
-		.stats-row {
-			gap: 10px;
-		}
-
-		.card-footer {
-			min-height: 60px;
-			padding: 0 15px 15px;
-		}
-
-		.project-logo {
-			height: 2.5rem;
-		}
 	}
 </style>

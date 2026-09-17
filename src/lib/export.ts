@@ -1,80 +1,58 @@
 import html2canvas from 'html2canvas';
 import { ANIMATION_DELAY_MS } from '../constants/defaults';
-import { ASSET_SIZES, CARD_EXPORT, EXPORT_TEXT_SIZES } from '../constants/card-dimensions';
-
-const TEMP_EXPORT_STYLE_ID = 'temp-export-styles';
+import { CARD_EXPORT } from '../constants/card-dimensions';
 
 /**
  * Exports the card identified by `cardId` to a downloaded PNG at the
- * official 1280x640 GitHub social-preview size, by cloning it into an
- * offscreen wrapper sized exactly to CARD_EXPORT and rendering with
- * html2canvas.
+ * official 1280x640 GitHub social-preview size.
+ *
+ * Uses 2x supersampling (SSAA) and high-quality bicubic downscaling
+ * to eliminate fuzzy text and jagged vector curves from html2canvas.
  */
 export async function exportToPNG(cardId: string): Promise<void> {
 	const canvas = await renderCardToCanvas(cardId);
 	downloadImage(canvas);
 }
 
+/**
+ * Copies the card image directly to the system clipboard as PNG.
+ * Compatible with Safari/WebKit user-activation constraints.
+ */
 export async function copyCardToClipboard(cardId: string): Promise<void> {
 	if (!navigator.clipboard || !navigator.clipboard.write) {
 		throw new Error('Clipboard API not supported in this browser environment');
 	}
+
 	const blobPromise = (async () => {
 		const canvas = await renderCardToCanvas(cardId);
 		const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
 		if (!blob) throw new Error('Failed to generate image blob');
 		return blob;
 	})();
+
 	await navigator.clipboard.write([
-		new ClipboardItem({ 'image/png': blobPromise })
+		new ClipboardItem({ 'image/png': blobPromise }),
 	]);
 }
 
-async function renderCardToCanvas(cardId: string): Promise<HTMLCanvasElement> {
+/**
+ * Renders the canonical 1280x640 card to a crisp, high-fidelity canvas.
+ * Because the preview and export share the identical 1280x640 DOM & CSS layout
+ * (preview uses CSS transform: scale to fit screen), the exported image is
+ * 100% identical in proportions, fonts, and spacing to the on-screen preview.
+ */
+export async function renderCardToCanvas(cardId: string): Promise<HTMLCanvasElement> {
 	const card = document.getElementById(cardId);
 	if (!card) {
 		throw new Error('Card element not found');
 	}
 
-	const wrapper = createExportWrapper();
-	const clone = prepareCardForExport(card);
-	wrapper.appendChild(clone);
-	document.body.appendChild(wrapper);
-
-	try {
-		await new Promise((resolve) => setTimeout(resolve, ANIMATION_DELAY_MS));
-
-		const canvas = await html2canvas(wrapper, {
-			scale: 1,
-			backgroundColor: null,
-			logging: false,
-			useCORS: true,
-			allowTaint: true,
-			width: CARD_EXPORT.WIDTH,
-			height: CARD_EXPORT.HEIGHT,
-			onclone: (clonedDoc: Document) => {
-				const clonedWrapper = clonedDoc.querySelector<HTMLElement>('[style*="fixed"]');
-				if (clonedWrapper) {
-					const borderColor = getComputedStyle(document.documentElement)
-						.getPropertyValue('--border-color')
-						.trim();
-					clonedWrapper.style.borderBottom = `3rem solid ${borderColor}`;
-				}
-			},
-		});
-
-		return canvas;
-	} finally {
-		if (wrapper.parentNode) {
-			document.body.removeChild(wrapper);
-		}
-		removeTemporaryStyles();
+	// Ensure all webfonts (Manrope, JetBrains Mono) are completely decoded before rasterization
+	if (document.fonts && document.fonts.ready) {
+		await document.fonts.ready;
 	}
-}
 
-function createExportWrapper(): HTMLDivElement {
 	const wrapper = document.createElement('div');
-
 	Object.assign(wrapper.style, {
 		position: 'fixed',
 		top: '-9999px',
@@ -82,178 +60,62 @@ function createExportWrapper(): HTMLDivElement {
 		width: `${CARD_EXPORT.WIDTH}px`,
 		height: `${CARD_EXPORT.HEIGHT}px`,
 		overflow: 'hidden',
-		zIndex: '-1',
+		zIndex: '-9999',
 		boxSizing: 'border-box',
+		backgroundColor: 'transparent',
 	});
 
-	const bgColor = getComputedStyle(document.documentElement).getPropertyValue('--bg-color').trim();
-	const borderColor = getComputedStyle(document.documentElement)
-		.getPropertyValue('--border-color')
-		.trim();
+	// Clone the card directly — it carries all classes, styles, and scoped attributes
+	const clone = card.cloneNode(true) as HTMLElement;
 
-	wrapper.style.backgroundColor = bgColor;
-	wrapper.style.borderBottom = `3rem solid ${borderColor}`;
-
-	return wrapper;
-}
-
-function prepareCardForExport(originalCard: HTMLElement): HTMLElement {
-	const clone = originalCard.cloneNode(true) as HTMLElement;
-
+	// Reset the preview scale transform so it renders at 100% canonical 1280x640 size
 	Object.assign(clone.style, {
-		width: '100%',
-		height: '100%',
+		transform: 'none',
+		position: 'relative',
+		top: '0',
+		left: '0',
+		width: `${CARD_EXPORT.WIDTH}px`,
+		height: `${CARD_EXPORT.HEIGHT}px`,
 		maxWidth: 'none',
 		margin: '0',
-		padding: '40pt 40pt 0 40pt',
 		boxShadow: 'none',
-		position: 'relative',
 	});
 
-	copyComputedStyles(originalCard, clone);
-	scaleCardElements(clone);
+	wrapper.appendChild(clone);
+	document.body.appendChild(wrapper);
 
-	return clone;
-}
+	try {
+		await new Promise((resolve) => setTimeout(resolve, ANIMATION_DELAY_MS));
 
-function copyComputedStyles(source: HTMLElement, target: HTMLElement): void {
-	const styles = window.getComputedStyle(source);
-
-	target.style.backgroundColor = styles.backgroundColor;
-
-	if (styles.backgroundImage !== 'none') {
-		target.style.backgroundImage = styles.backgroundImage;
-		target.style.backgroundSize = 'cover';
-		target.style.backgroundPosition = 'center';
-		target.style.backgroundRepeat = 'no-repeat';
-
-		if (source.classList.contains('has-bg-image')) {
-			target.classList.add('has-bg-image');
-			addDarkOverlayStyle();
-		}
-	}
-}
-
-function addDarkOverlayStyle(): void {
-	if (document.getElementById(TEMP_EXPORT_STYLE_ID)) return;
-
-	const style = document.createElement('style');
-	style.id = TEMP_EXPORT_STYLE_ID;
-	style.textContent = `
-		.has-bg-image::before {
-			content: '';
-			position: absolute;
-			top: 0;
-			left: 0;
-			right: 0;
-			bottom: 0;
-			background-color: rgba(0, 0, 0, 0.6);
-			z-index: 1;
-			pointer-events: none;
-		}
-	`;
-	document.head.appendChild(style);
-}
-
-function scaleCardElements(card: HTMLElement): void {
-	const header = card.querySelector<HTMLElement>('.card-header');
-	if (header) {
-		Object.assign(header.style, { zIndex: '2', padding: '30px', height: '120px', minHeight: '120px' });
-	}
-
-	const body = card.querySelector<HTMLElement>('.card-body');
-	if (body) {
-		Object.assign(body.style, { zIndex: '2', padding: '30px' });
-	}
-
-	const footer = card.querySelector<HTMLElement>('.card-footer');
-	if (footer) {
-		Object.assign(footer.style, {
-			zIndex: '2',
-			padding: '0 30px 30px',
-			minHeight: '100px',
+		// Render with 2x scale for Retina / high-DPI supersampling
+		const hiresCanvas = await html2canvas(wrapper, {
+			scale: 2,
+			backgroundColor: null,
+			logging: false,
+			useCORS: true,
+			allowTaint: true,
+			width: CARD_EXPORT.WIDTH,
+			height: CARD_EXPORT.HEIGHT,
 		});
-	}
 
-	const textElements: Record<string, { selector: string; fontSizeRem: number; lineHeight?: number }> = {
-		repoName: { selector: '#displayRepoName', ...EXPORT_TEXT_SIZES.repoName },
-		username: { selector: '#displayUsername', ...EXPORT_TEXT_SIZES.username },
-		description: { selector: '#displayDescription', ...EXPORT_TEXT_SIZES.description },
-		starCount: { selector: '#displayStarCount', ...EXPORT_TEXT_SIZES.statCount },
-		forkCount: { selector: '#displayForkCount', ...EXPORT_TEXT_SIZES.statCount },
-		language: { selector: '#displayLanguage', ...EXPORT_TEXT_SIZES.statCount },
-	};
-
-	for (const config of Object.values(textElements)) {
-		const element = card.querySelector<HTMLElement>(config.selector);
-		if (element) {
-			element.style.fontSize = `${config.fontSizeRem}rem`;
-			if (config.lineHeight) {
-				element.style.lineHeight = `${config.lineHeight}`;
-			}
+		// High-quality downsampling to exact 1280x640 (Supersample Anti-Aliasing)
+		const finalCanvas = document.createElement('canvas');
+		finalCanvas.width = CARD_EXPORT.WIDTH;
+		finalCanvas.height = CARD_EXPORT.HEIGHT;
+		const ctx = finalCanvas.getContext('2d');
+		if (!ctx) {
+			return hiresCanvas;
 		}
-	}
 
-	const profilePic = card.querySelector<HTMLElement>('.profile-pic');
-	if (profilePic) {
-		profilePic.style.width = `${ASSET_SIZES.profilePic.export}px`;
-		profilePic.style.height = `${ASSET_SIZES.profilePic.export}px`;
-	}
+		ctx.imageSmoothingEnabled = true;
+		ctx.imageSmoothingQuality = 'high';
+		ctx.drawImage(hiresCanvas, 0, 0, CARD_EXPORT.WIDTH, CARD_EXPORT.HEIGHT);
 
-	const statChips = card.querySelectorAll<HTMLElement>('.stat-chip');
-	statChips.forEach((chip) => {
-		chip.style.gap = '10px';
-	});
-
-	const statIcons = card.querySelectorAll<HTMLElement>('.stat-chip svg');
-	statIcons.forEach((icon) => {
-		icon.style.width = `${ASSET_SIZES.statIcon.export}px`;
-		icon.style.height = `${ASSET_SIZES.statIcon.export}px`;
-	});
-
-	const langDot = card.querySelector<HTMLElement>('.lang-dot');
-	if (langDot) {
-		langDot.style.width = `${ASSET_SIZES.langDot.export}px`;
-		langDot.style.height = `${ASSET_SIZES.langDot.export}px`;
-		langDot.style.marginRight = '8px';
-	}
-
-	const languageBar = card.querySelector<HTMLElement>('.language-bar');
-	if (languageBar) {
-		languageBar.style.height = `${ASSET_SIZES.languageBar.export}px`;
-		// The .language-bar CSS rule's negative margin (-25px) compensates for
-		// the PREVIEW card's 25px padding so the bar reaches the true edges.
-		// The export clone's own padding is overridden above to 40pt/40pt/0/40pt
-		// (see prepareCardForExport), so that same -25px would under-compensate
-		// left/right and over-shoot the now-zero bottom padding. Override both
-		// inline to match the clone's actual padding instead.
-		languageBar.style.margin = '0 -40pt 0';
-		languageBar.style.width = 'calc(100% + 80pt)';
-	}
-
-	const projectLogo = card.querySelector<HTMLElement>('.project-logo');
-	if (projectLogo) {
-		projectLogo.style.width = 'auto';
-		projectLogo.style.height = '4rem';
-		projectLogo.style.borderRadius = '10px';
-	}
-
-	const logoContainer = card.querySelector<HTMLElement>('.logo-container');
-	if (logoContainer) {
-		Object.assign(logoContainer.style, {
-			zIndex: '2',
-			display: 'flex',
-			alignItems: 'center',
-			justifyContent: 'center',
-			maxHeight: '5rem',
-		});
-	}
-}
-
-function removeTemporaryStyles(): void {
-	const tempStyles = document.getElementById(TEMP_EXPORT_STYLE_ID);
-	if (tempStyles?.parentNode) {
-		tempStyles.parentNode.removeChild(tempStyles);
+		return finalCanvas;
+	} finally {
+		if (wrapper.parentNode) {
+			document.body.removeChild(wrapper);
+		}
 	}
 }
 
