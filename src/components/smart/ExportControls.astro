@@ -36,7 +36,7 @@ import Button from '../ui/Button.astro';
 
 		try {
 			await copyCardToClipboard('githubCard');
-			pushToast('Card image copied to clipboard!', 'success');
+			pushToast('Image copied to clipboard!', 'success');
 		} catch (error) {
 			pushToast(error instanceof Error ? error.message : String(error), 'error');
 			console.error(error);

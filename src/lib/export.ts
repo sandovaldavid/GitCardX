@@ -11,48 +11,26 @@ const TEMP_EXPORT_STYLE_ID = 'temp-export-styles';
  * html2canvas.
  */
 export async function exportToPNG(cardId: string): Promise<void> {
-	const card = document.getElementById(cardId);
-	if (!card) {
-		throw new Error('Card element not found');
-	}
-
-	const wrapper = createExportWrapper();
-	const clone = prepareCardForExport(card);
-	wrapper.appendChild(clone);
-	document.body.appendChild(wrapper);
-
-	try {
-		await new Promise((resolve) => setTimeout(resolve, ANIMATION_DELAY_MS));
-
-		const canvas = await html2canvas(wrapper, {
-			scale: 1,
-			backgroundColor: null,
-			logging: false,
-			useCORS: true,
-			allowTaint: true,
-			width: CARD_EXPORT.WIDTH,
-			height: CARD_EXPORT.HEIGHT,
-			onclone: (clonedDoc: Document) => {
-				const clonedWrapper = clonedDoc.querySelector<HTMLElement>('[style*="fixed"]');
-				if (clonedWrapper) {
-					const borderColor = getComputedStyle(document.documentElement)
-						.getPropertyValue('--border-color')
-						.trim();
-					clonedWrapper.style.borderBottom = `3rem solid ${borderColor}`;
-				}
-			},
-		});
-
-		downloadImage(canvas);
-	} finally {
-		if (wrapper.parentNode) {
-			document.body.removeChild(wrapper);
-		}
-		removeTemporaryStyles();
-	}
+	const canvas = await renderCardToCanvas(cardId);
+	downloadImage(canvas);
 }
 
 export async function copyCardToClipboard(cardId: string): Promise<void> {
+	if (!navigator.clipboard || !navigator.clipboard.write) {
+		throw new Error('Clipboard API not supported in this browser environment');
+	}
+	const blobPromise = (async () => {
+		const canvas = await renderCardToCanvas(cardId);
+		const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
+		if (!blob) throw new Error('Failed to generate image blob');
+		return blob;
+	})();
+	await navigator.clipboard.write([
+		new ClipboardItem({ 'image/png': blobPromise })
+	]);
+}
+
+async function renderCardToCanvas(cardId: string): Promise<HTMLCanvasElement> {
 	const card = document.getElementById(cardId);
 	if (!card) {
 		throw new Error('Card element not found');
@@ -85,14 +63,7 @@ export async function copyCardToClipboard(cardId: string): Promise<void> {
 			},
 		});
 
-		const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
-		if (!blob) throw new Error('Failed to generate image blob');
-		if (!navigator.clipboard || !navigator.clipboard.write) {
-			throw new Error('Clipboard API not supported in this browser environment');
-		}
-		await navigator.clipboard.write([
-			new ClipboardItem({ 'image/png': blob })
-		]);
+		return canvas;
 	} finally {
 		if (wrapper.parentNode) {
 			document.body.removeChild(wrapper);
