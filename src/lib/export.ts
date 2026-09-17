@@ -200,6 +200,11 @@ function scaleCardElements(card: HTMLElement): void {
 		profilePic.style.height = `${ASSET_SIZES.profilePic.export}px`;
 	}
 
+	const statChips = card.querySelectorAll<HTMLElement>('.stat-chip');
+	statChips.forEach((chip) => {
+		chip.style.gap = '10px';
+	});
+
 	const statIcons = card.querySelectorAll<HTMLElement>('.stat-chip svg');
 	statIcons.forEach((icon) => {
 		icon.style.width = `${ASSET_SIZES.statIcon.export}px`;
@@ -210,6 +215,7 @@ function scaleCardElements(card: HTMLElement): void {
 	if (langDot) {
 		langDot.style.width = `${ASSET_SIZES.langDot.export}px`;
 		langDot.style.height = `${ASSET_SIZES.langDot.export}px`;
+		langDot.style.marginRight = '8px';
 	}
 
 	const languageBar = card.querySelector<HTMLElement>('.language-bar');

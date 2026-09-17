@@ -79,12 +79,12 @@ import { GITHUB_API } from '../../constants/github';
 		}
 
 		// Stats and the language bar only mean anything once a repo has
-		// actually been loaded — before that, hide them instead of showing
-		// misleading "0 stars/0 forks" placeholders.
-		const repoLoaded = state.profileLoaded && Boolean(state.repoName);
+		// actually been loaded or manually entered — before that, hide them
+		// instead of showing misleading "0 stars/0 forks" placeholders.
+		const hasRepoOrMetrics = Boolean(state.repoName) || state.starCount > 0 || state.forkCount > 0 || Boolean(state.primaryLanguage);
 
 		if (statsRow) {
-			statsRow.style.display = repoLoaded && state.showStats ? 'flex' : 'none';
+			statsRow.style.display = hasRepoOrMetrics && state.showStats ? 'flex' : 'none';
 		}
 		if (displayStarCount) displayStarCount.textContent = formatCompactNumber(state.starCount);
 		if (displayForkCount) displayForkCount.textContent = formatCompactNumber(state.forkCount);
@@ -100,7 +100,7 @@ import { GITHUB_API } from '../../constants/github';
 		}
 
 		if (languageBar) {
-			if (repoLoaded && state.showLanguageBar && state.languages.length > 0) {
+			if (state.showLanguageBar && state.languages && state.languages.length > 0) {
 				languageBar.style.display = 'flex';
 				languageBar.replaceChildren(
 					...state.languages.map((slice) => {
